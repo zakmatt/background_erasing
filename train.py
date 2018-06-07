@@ -1,15 +1,16 @@
+import argparse
+
 from keras.optimizers import Adam
 
 from networks.unet import Unet
 from utils.batch_generator import BatchGenerator
 
-DATA_DIR = '/Users/matt/masters_thesis/resized_data/'
 BATCH_SIZE = 8
 IMG_ROWS, IMG_COLS = 224, 224
 
 
-def train():
-    batch_gen = BatchGenerator(data_dir=DATA_DIR, batch_size=BATCH_SIZE)
+def train(data_dir):
+    batch_gen = BatchGenerator(data_dir=data_dir, batch_size=BATCH_SIZE)
     batch_gen.load_data()
     model = Unet.model(IMG_ROWS, IMG_COLS)
     model.compile(
@@ -32,4 +33,11 @@ def train():
 
 
 if __name__ == '__main__':
-    train()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d",
+                        "--data_dir",
+                        help='Training data directory',
+                        required=True)
+    args = parser.parse_args()
+    data_dir = args.data_dir
+    train(data_dir)
