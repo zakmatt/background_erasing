@@ -35,6 +35,12 @@ class BatchGenerator(object):
         self._data_dir = data_dir
 
     def load_data(self):
+        """Load files names from a given directory
+
+        Images are loaded in pairs; image - mask
+
+        """
+
         files = glob.glob(os.path.join(self._data_dir, '*.jpg'))
         files = [f for f in files if '_mask' not in f]
         files = sorted(
@@ -46,7 +52,10 @@ class BatchGenerator(object):
             key=lambda pair: pair[0]
         )
 
-        self._images_pairs = files
+        self._images_pairs = np.array(files)
+        self._dataset_size = len(files)
+        self._batch_size = (self._batch_size if self.batch_size < len(files)
+                            else len(files))
 
         self._num_batches = int(ceil(len(files)/self.batch_size))
 
@@ -80,12 +89,40 @@ class BatchGenerator(object):
     def num_batches(self):
         return self._num_batches
 
+    @staticmethod
+    def _swape_axes(img):
+        return cv.cvtColor(img, cv.COLOR_BGR2RGB)
+
     @property
     def train_batches(self):
         self._train_batch_pos += 1
-        x_data = []
-        y_data = []
         for batch_pos in range(self._num_batches):
+            idx = np.random.randint(self._dataset_size, size=self.batch_size)
+            if self._batch_size == 1:
+                idx = idx[0]
+                pairs = [self._images_pairs[idx]]
+            else:
+                pairs = self._images_pairs[idx]
+
+            x_data = []
+            y_data = []
+            for pair in pairs:
+                img_path, mask_path = pair
+
+                img = cv.imread(img_path)
+                img = self._swape_axes(img).astype(np.float32)
+
+                mask = cv.imread(mask_path)
+                mask = self._swape_axes(mask).astype(np.float32)
+
+                x_data.append(img)
+                y_data.append(mask)
+
+            x_data = np.array(x_data, dtype=np.float32)
+            y_data = np.array(y_data, dtype=np.float32)
+
+            yield x_data, y_data
+            '''
             for pair in self._images_pairs[
                         batch_pos * self._batch_size:(
                                     batch_pos + 1) * self._batch_size]:
@@ -101,6 +138,8 @@ class BatchGenerator(object):
             y_data = np.array(y_data, dtype=np.float32)
 
             yield x_data, y_data
+            '''
+        self._train_batch_pos = 1
 
     @property
     def test_batch(self):
