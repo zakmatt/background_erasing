@@ -1,5 +1,5 @@
-import cv2 as cv
 import glob
+import imageio
 import numpy as np
 import os
 
@@ -89,9 +89,9 @@ class BatchGenerator(object):
     def num_batches(self):
         return self._num_batches
 
-    @staticmethod
-    def _swape_axes(img):
-        return cv.cvtColor(img, cv.COLOR_BGR2RGB)
+    #@staticmethod
+    #def _swape_axes(img):
+    #    return cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
     @property
     def train_batches(self):
@@ -109,11 +109,13 @@ class BatchGenerator(object):
             for pair in pairs:
                 img_path, mask_path = pair
 
-                img = cv.imread(img_path)
-                img = self._swape_axes(img).astype(np.float32)
+                img = imageio.imread(img_path).astype(np.float32)
+                #img = cv.imread(img_path)
+                #img = self._swape_axes(img).astype(np.float32)
 
-                mask = cv.imread(mask_path)
-                mask = self._swape_axes(mask).astype(np.float32)
+                mask = imageio.imread(mask_path).astype(np.float32)
+                #mask = cv.imread(mask_path)
+                #mask = self._swape_axes(mask).astype(np.float32)
 
                 x_data.append(img)
                 y_data.append(mask)
