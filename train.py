@@ -18,7 +18,7 @@ def train(data_dir):
         loss=Unet.loss,
         metrics=[Unet.metric]
     )
-    epochs = [100, 200, 500, 1000]
+    epochs = [100, 200, 500]
     for epoch in epochs:
         model.fit_generator(
             batch_gen.train_batches,
