@@ -46,7 +46,7 @@ class BatchGenerator(object):
         files = sorted(
             map(
                 lambda f_name:
-                    (f_name, '{}_mask.jpg'.format(f_name.split('.')[0])),
+                (f_name, '{}_mask.jpg'.format(f_name.split('.')[0])),
                 files
             ),
             key=lambda pair: pair[0]
@@ -57,7 +57,7 @@ class BatchGenerator(object):
         self._batch_size = (self._batch_size if self.batch_size < len(files)
                             else len(files))
 
-        self._num_batches = int(ceil(len(files)/self.batch_size))
+        self._num_batches = int(ceil(len(files) / self.batch_size))
 
     @property
     def data_dir(self):
@@ -89,13 +89,8 @@ class BatchGenerator(object):
     def num_batches(self):
         return self._num_batches
 
-    #@staticmethod
-    #def _swape_axes(img):
-    #    return cv.cvtColor(img, cv.COLOR_BGR2RGB)
-
     @property
     def train_batches(self):
-        self._train_batch_pos += 1
         for batch_pos in range(self._num_batches):
             idx = np.random.randint(self._dataset_size, size=self.batch_size)
             if self._batch_size == 1:
@@ -108,14 +103,16 @@ class BatchGenerator(object):
             y_data = []
             for pair in pairs:
                 img_path, mask_path = pair
+                # any of files does not exist
+                if not os.path.isfile(img_path) or \
+                   not os.path.isfile(mask_path):
+                    continue
 
                 img = imageio.imread(img_path).astype(np.float32)
-                #img = cv.imread(img_path)
-                #img = self._swape_axes(img).astype(np.float32)
-
                 mask = imageio.imread(mask_path).astype(np.float32)
-                #mask = cv.imread(mask_path)
-                #mask = self._swape_axes(mask).astype(np.float32)
+
+                if img is None or mask is None:
+                    continue
 
                 x_data.append(img)
                 y_data.append(mask)
@@ -124,24 +121,6 @@ class BatchGenerator(object):
             y_data = np.array(y_data, dtype=np.float32)
 
             yield x_data, y_data
-            '''
-            for pair in self._images_pairs[
-                        batch_pos * self._batch_size:(
-                                    batch_pos + 1) * self._batch_size]:
-                img_path, mask_path = pair
-                img = cv.imread(img_path).astype(np.float32)
-                mask = cv.imread(mask_path).astype(np.float32)
-                x_data.append(img)
-                y_data.append(mask)
-
-                self._train_batch_pos += 1
-
-            x_data = np.array(x_data, dtype=np.float32)
-            y_data = np.array(y_data, dtype=np.float32)
-
-            yield x_data, y_data
-            '''
-        self._train_batch_pos = 1
 
     @property
     def test_batch(self):
