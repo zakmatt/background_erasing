@@ -9,7 +9,7 @@ from utils.batch_generator import BatchGenerator
 
 BATCH_SIZE = 8
 IMG_ROWS, IMG_COLS = 224, 224
-NB_EPOCHS=701
+NB_EPOCHS=1001
 
 
 def train(data_dir):
@@ -24,7 +24,7 @@ def train(data_dir):
     checkpoint = ModelCheckpoint(
         filepath='unet_batch_8_out_3_epoch_{epoch:02d}.hdf5',
         mode='auto',
-        period=50
+        period=100
     )
 
     model.fit_generator(
