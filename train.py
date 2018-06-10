@@ -1,5 +1,6 @@
 import argparse
 
+from bleach import callbacks
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import Adam
 
@@ -21,7 +22,7 @@ def train(data_dir):
         metrics=[Unet.metric]
     )
     checkpoint = ModelCheckpoint(
-        ilepath='unet_batch_8_out_3_epoch_{epoch:02d}.hdf5',
+        filepath='unet_batch_8_out_3_epoch_{epoch:02d}.hdf5',
         mode='auto',
         period=50
     )
@@ -30,7 +31,7 @@ def train(data_dir):
         batch_gen.train_batches,
         steps_per_epoch=1e3,
         epochs=NB_EPOCHS,
-        checkpoint=[checkpoint]
+        callbacks=[checkpoint],
     )
 
 
