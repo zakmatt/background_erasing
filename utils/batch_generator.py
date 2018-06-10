@@ -111,6 +111,8 @@ class BatchGenerator(object):
 
                     img = imageio.imread(img_path).astype(np.float32)
                     mask = imageio.imread(mask_path).astype(np.float32)
+                    if len(mask.shape) == 2:
+                        mask = np.expand_dims(mask, axis=2)
 
                     if img is None or mask is None:
                         continue
