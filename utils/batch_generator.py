@@ -91,36 +91,37 @@ class BatchGenerator(object):
 
     @property
     def train_batches(self):
-        for batch_pos in range(self._num_batches):
-            idx = np.random.randint(self._dataset_size, size=self.batch_size)
-            if self._batch_size == 1:
-                idx = idx[0]
-                pairs = [self._images_pairs[idx]]
-            else:
-                pairs = self._images_pairs[idx]
+        while 1:
+            for batch_pos in range(self._num_batches):
+                idx = np.random.randint(self._dataset_size, size=self.batch_size)
+                if self._batch_size == 1:
+                    idx = idx[0]
+                    pairs = [self._images_pairs[idx]]
+                else:
+                    pairs = self._images_pairs[idx]
 
-            x_data = []
-            y_data = []
-            for pair in pairs:
-                img_path, mask_path = pair
-                # any of files does not exist
-                if not os.path.isfile(img_path) or \
-                   not os.path.isfile(mask_path):
-                    continue
+                x_data = []
+                y_data = []
+                for pair in pairs:
+                    img_path, mask_path = pair
+                    # any of files does not exist
+                    if not os.path.isfile(img_path) or \
+                       not os.path.isfile(mask_path):
+                        continue
 
-                img = imageio.imread(img_path).astype(np.float32)
-                mask = imageio.imread(mask_path).astype(np.float32)
+                    img = imageio.imread(img_path).astype(np.float32)
+                    mask = imageio.imread(mask_path).astype(np.float32)
 
-                if img is None or mask is None:
-                    continue
+                    if img is None or mask is None:
+                        continue
 
-                x_data.append(img)
-                y_data.append(mask)
+                    x_data.append(img)
+                    y_data.append(mask)
 
-            x_data = np.array(x_data, dtype=np.float32)
-            y_data = np.array(y_data, dtype=np.float32)
+                x_data = np.array(x_data, dtype=np.float32)
+                y_data = np.array(y_data, dtype=np.float32)
 
-            yield x_data, y_data
+                yield x_data, y_data
 
     @property
     def test_batch(self):
