@@ -1,15 +1,15 @@
 import argparse
 
-from bleach import callbacks
+
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import Adam
 
-from networks.unet import Unet
+from networks.unet_mask_out import Unet
 from utils.batch_generator import BatchGenerator
 
-BATCH_SIZE = 8
+BATCH_SIZE = 1
 IMG_ROWS, IMG_COLS = 224, 224
-NB_EPOCHS=1001
+NB_EPOCHS = 1001
 
 
 def train(data_dir):
@@ -24,7 +24,7 @@ def train(data_dir):
     checkpoint = ModelCheckpoint(
         filepath='unet_batch_8_out_3_epoch_{epoch:02d}.hdf5',
         mode='auto',
-        period=100
+        period=50
     )
 
     model.fit_generator(
