@@ -36,7 +36,10 @@ class TestBaseGenerator(TestCase):
         self.assertEqual(self.batch_gen.num_batches, 1)
 
     def test_loaded_dataset_shape(self):
-        shape = (2, 224, 224, 3)
+        x_shape = (2, 224, 224, 3)
+        y_shape = (2, 224, 224, 1)
         x, y = next(self.batch_gen.train_batches)
-        self.assertEqual(x.shape, shape)
-        self.assertEqual(y.shape, shape)
+        self.assertEqual(x.shape, x_shape)
+        self.assertEqual(y.shape, y_shape)
+        self.assertEqual(y.max(), 1)
+        self.assertEqual(y.min(), 0)
