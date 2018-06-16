@@ -110,11 +110,13 @@ class BatchGenerator(object):
     @property
     def train_batches(self):
 
-        for batch_pos in range(self._num_batches):
-
-            start_range = batch_pos * self._batch_size
-            end_range = (batch_pos + 1) * self._batch_size
-            pairs = self._images_pairs[start_range:end_range]
+        while True:
+            idx = np.random.choice(
+                range(len(self._images_pairs) - 1),
+                self._batch_size,
+                replace=False
+            )
+            pairs = self._images_pairs[idx]
             x_data, y_data = [], []
             for pair in pairs:
                 img, mask = BatchGenerator.read_images(pair)
