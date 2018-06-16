@@ -22,7 +22,7 @@ def train(data_dir):
         metrics=[Unet.metric]
     )
     checkpoint = ModelCheckpoint(
-        filepath='unet_batch_8_out_3_epoch_{epoch:02d}.hdf5',
+        filepath='unet_batch_1_out_3_epoch_{epoch:02d}.hdf5',
         mode='auto',
         period=50
     )
