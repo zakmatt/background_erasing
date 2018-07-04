@@ -4,11 +4,13 @@ import argparse
 from keras.callbacks import ModelCheckpoint
 from keras.optimizers import Adam
 
-from networks.unet_mask_out import Unet
+#from networks.unet_mask_out import Unet
+from networks.deep_unet import Unet
+
 from utils.batch_generator import BatchGenerator
 
 BATCH_SIZE = 1
-IMG_ROWS, IMG_COLS = 224, 224
+IMG_ROWS, IMG_COLS = 256, 256
 NB_EPOCHS = 1001
 
 
@@ -22,7 +24,7 @@ def train(data_dir):
         metrics=[Unet.metric]
     )
     checkpoint = ModelCheckpoint(
-        filepath='unet_batch_1_out_3_epoch_{epoch:02d}.hdf5',
+        filepath='deep_unet_batch_1_epoch_{epoch:02d}.hdf5',
         mode='auto',
         period=50
     )
