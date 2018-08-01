@@ -17,7 +17,7 @@ class DirecotryNotExisting(Exception):
 class BatchGenerator(object):
     """Class generating image batches"""
 
-    def __init__(self, data_dir, batch_size=1):
+    def __init__(self, data_dir, val_data_dir, batch_size=1):
         self._train_batch_pos = 0
         self._test_batch_pos = 0
 
@@ -33,15 +33,11 @@ class BatchGenerator(object):
             raise DirecotryNotExisting()
 
         self._data_dir = data_dir
+        self._val_data_dir = val_data_dir
 
-    def load_data(self):
-        """Load files names from a given directory
-
-        Images are loaded in pairs; image - mask
-
-        """
-
-        files = glob.glob(os.path.join(self._data_dir, '*.jpg'))
+    @staticmethod
+    def _get_files_names(data_dir):
+        files = glob.glob(os.path.join(data_dir, '*.jpg'))
         files = [f for f in files if '_mask' not in f]
         files = sorted(
             map(
@@ -51,17 +47,34 @@ class BatchGenerator(object):
             ),
             key=lambda pair: pair[0]
         )
+        return files
 
-        self._images_pairs = np.array(files)
-        self._dataset_size = len(files)
-        self._batch_size = (self._batch_size if self.batch_size < len(files)
-                            else len(files))
+    def load_data(self):
+        """Load files names from a given directory
 
-        self._num_batches = int(ceil(len(files) / self.batch_size))
+        Images are loaded in pairs; image - mask
+
+        """
+
+        train_files = BatchGenerator._get_files_names(self._data_dir)
+        val_files = BatchGenerator._get_files_names(self._val_data_dir)
+        self._images_pairs = np.array(train_files)
+        self._val_images_pairs = np.array(val_files)
+        self._dataset_size = len(train_files)
+        self._batch_size = (
+            self._batch_size if self.batch_size < len(train_files)
+            else len(train_files)
+        )
+
+        self._num_batches = int(ceil(len(train_files) / self.batch_size))
 
     @property
     def data_dir(self):
         return self._data_dir
+
+    @property
+    def val_dir(self):
+        return self._val_data_dir
 
     @data_dir.setter
     def data_dir(self, data_dir):
@@ -69,6 +82,13 @@ class BatchGenerator(object):
             raise NoDataPath()
 
         self._data_dir = data_dir
+
+    @data_dir.setter
+    def val_data_dir(self, val_data_dir):
+        if not val_data_dir:
+            raise NoDataPath()
+
+        self._val_data_dir = val_data_dir
 
     @property
     def batch_size(self):
@@ -107,6 +127,23 @@ class BatchGenerator(object):
 
         return img, mask
 
+    @staticmethod
+    def _read_batch_pairs(pairs):
+        x_data, y_data = [], []
+        for pair in pairs:
+            img, mask = BatchGenerator.read_images(pair)
+
+            if img is None or mask is None:
+                continue
+
+            x_data.append(img)
+            y_data.append(mask)
+
+        x_data = np.array(x_data, dtype=np.float32)
+        y_data = np.array(y_data, dtype=np.float32)
+
+        return x_data, y_data
+
     @property
     def train_batches(self):
 
@@ -117,21 +154,23 @@ class BatchGenerator(object):
                 replace=False
             )
             pairs = self._images_pairs[idx]
-            x_data, y_data = [], []
-            for pair in pairs:
-                img, mask = BatchGenerator.read_images(pair)
-
-                if img is None or mask is None:
-                    continue
-
-                x_data.append(img)
-                y_data.append(mask)
-
-            x_data = np.array(x_data, dtype=np.float32)
-            y_data = np.array(y_data, dtype=np.float32)
+            x_data, y_data = BatchGenerator._read_batch_pairs(pairs)
 
             yield x_data, y_data
 
-    @property
-    def test_batch(self):
-        pass
+    def generate_test_batch(self, batch_size):
+        def idxs(imgs_pair):
+            return np.random.choice(
+                range(len(imgs_pair) - 1),
+                batch_size,
+                replace=False
+            )
+        train_idx = idxs(self._images_pairs)
+        train_pairs = self._images_pairs[train_idx]
+        val_idx = idxs(self._val_images_pairs)
+        val_pairs = self._val_images_pairs[val_idx]
+
+        train_batch = BatchGenerator._read_batch_pairs(train_pairs)
+        val_batch = BatchGenerator._read_batch_pairs(val_pairs)
+
+        return train_batch, val_batch
