@@ -1,4 +1,5 @@
 import argparse
+import os
 import numpy as np
 
 from keras.callbacks import ModelCheckpoint, Callback
@@ -12,14 +13,14 @@ from utils.batch_generator import BatchGenerator
 BATCH_SIZE = 1
 VAL_BATCH = 150
 IMG_ROWS, IMG_COLS = 256, 256
-NB_EPOCHS = 1001
+NB_EPOCHS = 2000
 
 
 class LossValidateCallback(Callback):
+    
     def __init__(self, batch_generator, results_file):
         self.batch_generator = batch_generator
 
-        import os
         basedir = os.path.dirname(results_file)
         if not os.path.exists(basedir):
             os.makedirs(basedir)
@@ -37,7 +38,6 @@ class LossValidateCallback(Callback):
         return 1 - IOU_calc(y_true, y_false)
 
     def on_epoch_end(self, epoch, logs=None):
-        # train_losses, val_losses = []
         train_batch, val_batch = self.batch_generator(VAL_BATCH)
         train_imgs, train_masks = train_batch
         val_imgs, val_masks = val_batch
@@ -76,7 +76,7 @@ class LossValidateCallback(Callback):
             file.writelines(text)
 
 
-def train(data_dir, val_data_dir, results_file):
+def train(data_dir, val_data_dir, results_file, model_info=None):
     batch_gen = BatchGenerator(
         data_dir=data_dir, val_data_dir=val_data_dir, batch_size=BATCH_SIZE
     )
@@ -87,6 +87,13 @@ def train(data_dir, val_data_dir, results_file):
         loss=Unet.loss,
         metrics=[Unet.metric]
     )
+    initial_epoch = 1
+    if model_info:
+        weights_path = model_info['weights_path']
+        model.load_weights(weights_path)
+        if model_info['initial_epoch']:
+            initial_epoch = model_info['initial_epoch']
+
     checkpoint = ModelCheckpoint(
         filepath='deep_unet_batch_1_epoch_{epoch:02d}.hdf5',
         mode='auto',
@@ -104,6 +111,7 @@ def train(data_dir, val_data_dir, results_file):
                 results_file
             )
         ],
+        initial_epoch=initial_epoch
     )
 
 
@@ -121,8 +129,28 @@ if __name__ == '__main__':
                         "--results_file",
                         help='Metrics results file path',
                         required=True)
+    parser.add_argument("-w",
+                        "--weights_path",
+                        help='Pretrained model weights',
+                        required=True)
+    parser.add_argument("-e",
+                        "--initial_epoch",
+                        help='Initial epoch #',
+                        required=True)
     args = parser.parse_args()
     data_dir = args.data_dir
     val_data_dir = args.val_data_dir
     results_file = args.results_file
-    train(data_dir, val_data_dir, results_file)
+    weights_path = args.weights_path
+    initial_epoch = args.initial_epoch
+
+    if weights_path:
+        model_info = {}
+        if os.path.exists(weights_path):
+            model_info['weights_path'] = weights_path
+        if initial_epoch:
+            initial_epoch = int(initial_epoch)
+            model_info['initial_epoch'] = initial_epoch
+        train(data_dir, val_data_dir, results_file, model_info)
+    else:
+        train(data_dir, val_data_dir, results_file)
