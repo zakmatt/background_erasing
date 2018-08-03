@@ -132,7 +132,7 @@ class Unet(object):
         conv15 = Convolution2D(filters=8, kernel_size=(3, 3),
                                activation='relu', padding='same')(conv15)
 
-        conv16 = Convolution2D(filters=3, kernel_size=(1, 1),
+        conv16 = Convolution2D(filters=1, kernel_size=(1, 1),
                                activation='sigmoid')(conv15)
 
         model = Model(inputs=inputs, outputs=conv16)

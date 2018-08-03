@@ -17,7 +17,7 @@ NB_EPOCHS = 2000
 
 
 class LossValidateCallback(Callback):
-    
+
     def __init__(self, batch_generator, results_file):
         self.batch_generator = batch_generator
 
@@ -132,11 +132,11 @@ if __name__ == '__main__':
     parser.add_argument("-w",
                         "--weights_path",
                         help='Pretrained model weights',
-                        required=True)
+                        required=False)
     parser.add_argument("-e",
                         "--initial_epoch",
                         help='Initial epoch #',
-                        required=True)
+                        required=False)
     args = parser.parse_args()
     data_dir = args.data_dir
     val_data_dir = args.val_data_dir
