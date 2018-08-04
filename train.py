@@ -102,7 +102,7 @@ def train(data_dir, val_data_dir, results_file, model_info=None):
 
     model.fit_generator(
         batch_gen.train_batches,
-        steps_per_epoch=1e3,
+        steps_per_epoch=4e3,
         epochs=NB_EPOCHS,
         callbacks=[
             checkpoint,
