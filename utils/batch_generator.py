@@ -148,7 +148,6 @@ class BatchGenerator(object):
     def train_batches(self):
 
         while True:
-            print(self._batch_size)
             idx = np.random.choice(
                 range(len(self._images_pairs)),
                 self._batch_size,
