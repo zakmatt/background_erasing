@@ -161,7 +161,7 @@ class BatchGenerator(object):
     def generate_test_batch(self, batch_size):
         def idxs(imgs_pair):
             return np.random.choice(
-                range(len(imgs_pair) - 1),
+                range(len(imgs_pair)),
                 batch_size,
                 replace=False
             )
