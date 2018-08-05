@@ -87,7 +87,7 @@ def train(data_dir, val_data_dir, results_file, model_info=None):
         loss=Unet.loss,
         metrics=[Unet.metric]
     )
-    initial_epoch = 1
+    initial_epoch = 0
     if model_info:
         weights_path = model_info['weights_path']
         model.load_weights(weights_path)
@@ -102,7 +102,7 @@ def train(data_dir, val_data_dir, results_file, model_info=None):
 
     model.fit_generator(
         batch_gen.train_batches,
-        steps_per_epoch=4e3,
+        steps_per_epoch=2e3,
         epochs=NB_EPOCHS,
         callbacks=[
             checkpoint,
