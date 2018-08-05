@@ -140,15 +140,13 @@ class Unet(object):
         return model
 
     @staticmethod
-    def metric(y_true, y_pred, smooth=1):
+    def metric(y_true, y_false, smooth=1.):
         y_true_f = K.flatten(y_true)
-        y_pred_f = K.flatten(y_pred)
-        intersection = K.sum(y_true_f * y_pred_f)
-
-        return 2 * (intersection + smooth) / (
-            K.sum(y_true_f) + K.sum(y_pred_f) + smooth
-        )
+        y_false_f = K.flatten(y_false)
+        intersection = K.sum(y_true_f * y_false_f)
+        union = K.sum(y_true_f) + K.sum(y_false_f) - intersection
+        return (intersection + smooth) / (union + smooth)
 
     @staticmethod
     def loss(y_true, y_pred):
-        return 1 - Unet.metric(y_true, y_pred)
+        return 1.0 - Unet.metric(y_true, y_pred)

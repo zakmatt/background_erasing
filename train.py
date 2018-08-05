@@ -13,7 +13,7 @@ from utils.batch_generator import BatchGenerator
 BATCH_SIZE = 1
 VAL_BATCH = 150
 IMG_ROWS, IMG_COLS = 256, 256
-NB_EPOCHS = 2000
+NB_EPOCHS = 1000
 
 
 class LossValidateCallback(Callback):
