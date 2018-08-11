@@ -79,9 +79,9 @@ class Unet(object):
         y_true_f = K.flatten(y_true)
         y_false_f = K.flatten(y_false)
         intersection = K.sum(y_true_f * y_false_f)
-        return 2 * (intersection + smooth) / (
-            K.sum(y_true_f) + K.sum(y_false_f) + smooth)
+        union = K.sum(y_true_f) + K.sum(y_false_f) - intersection
+        return (intersection + smooth) / (union + smooth)
 
     @staticmethod
     def loss(y_true, y_false):
-        return -1 * Unet.metric(y_true, y_false)
+        return 1 - Unet.metric(y_true, y_false)
