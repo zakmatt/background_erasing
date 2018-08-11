@@ -17,6 +17,17 @@ IMG_ROWS, IMG_COLS = 256, 256
 NB_EPOCHS = 1000
 
 
+def mask_to_categorical(masks, batch_size):
+    masks = to_categorical(masks, 2)
+    masks = np.reshape(
+        masks,
+        (
+            batch_size, IMG_COLS * IMG_ROWS, 2
+        )
+    )
+    return masks
+
+
 class LossValidateCallback(Callback):
 
     def __init__(self, batch_generator, results_file):
@@ -34,18 +45,26 @@ class LossValidateCallback(Callback):
         train_results = self.model.predict(train_imgs)
         val_results = self.model.predict(val_imgs)
 
-        train_losses = [Unet.loss(*pair) for pair in
-                        zip(train_masks, train_results)]
+        # change categorical
+        train_losses = [Unet.loss(pair[0], mask_to_categorical(pair[1]))
+                        for pair in zip(train_masks, train_results)]
         average_train_loss = np.average(train_losses)
         std_train_loss = np.std(train_losses)
-        val_losses = [
-            Unet.loss(*pair) for pair in
-            zip(val_masks, val_results)]
+        # change categorical
+        val_losses = [Unet.loss(pair[0], mask_to_categorical(pair[1]))
+                      for pair in zip(val_masks, val_results)]
         average_val_loss = np.average(val_losses)
         std_val_loss = np.std(val_losses)
 
-        batch_train_loss = Unet.loss(train_masks, train_results)
-        batch_val_loss = Unet.loss(val_masks, val_results)
+        # change categorical
+        batch_train_loss = Unet.loss(
+            train_masks, mask_to_categorical(train_results)
+        )
+        
+        # change categorical
+        batch_val_loss = Unet.loss(
+            val_masks, mask_to_categorical(val_results)
+        )
 
         eval_train_loss, _ = self.model.evaluate(train_imgs, train_masks)
         eval_val_loss, _ = self.model.evaluate(val_imgs, val_masks)
