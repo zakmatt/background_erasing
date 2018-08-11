@@ -17,7 +17,7 @@ IMG_ROWS, IMG_COLS = 256, 256
 NB_EPOCHS = 1000
 
 
-def mask_to_categorical(masks, batch_size):
+def mask_to_categorical(masks, batch_size=1):
     masks = to_categorical(masks, 2)
     masks = np.reshape(
         masks,
@@ -25,7 +25,7 @@ def mask_to_categorical(masks, batch_size):
             batch_size, IMG_COLS * IMG_ROWS, 2
         )
     )
-    return masks
+    return masks.astype(np.float32)
 
 
 class LossValidateCallback(Callback):
@@ -38,6 +38,17 @@ class LossValidateCallback(Callback):
             os.makedirs(basedir)
         self.results_file = results_file
 
+    @staticmethod
+    def IOU_loss(y_true, y_false):
+        def IOU_calc(y_true, y_false, smooth=1.):
+            y_true_f = y_true.flatten()
+            y_false_f = y_false.flatten()
+            intersection = np.sum(y_true_f * y_false_f)
+            union = np.sum(y_true_f) + np.sum(y_false_f) - intersection
+            return (intersection + smooth) / (union + smooth)
+
+        return 1 - IOU_calc(y_true, y_false)
+
     def on_epoch_end(self, epoch, logs=None):
         train_batch, val_batch = self.batch_generator(VAL_BATCH)
         train_imgs, train_masks = train_batch
@@ -46,28 +57,43 @@ class LossValidateCallback(Callback):
         val_results = self.model.predict(val_imgs)
 
         # change categorical
-        train_losses = [Unet.loss(pair[0], mask_to_categorical(pair[1]))
-                        for pair in zip(train_masks, train_results)]
+        train_losses = [
+            LossValidateCallback.IOU_loss(
+                mask_to_categorical(pair[0]), pair[1]
+            )
+            for pair in zip(train_masks, train_results)
+        ]
         average_train_loss = np.average(train_losses)
         std_train_loss = np.std(train_losses)
+
         # change categorical
-        val_losses = [Unet.loss(pair[0], mask_to_categorical(pair[1]))
-                      for pair in zip(val_masks, val_results)]
+        val_losses = [
+            LossValidateCallback.IOU_loss(
+                mask_to_categorical(pair[0]), pair[1]
+            )
+            for pair in zip(val_masks, val_results)
+        ]
         average_val_loss = np.average(val_losses)
         std_val_loss = np.std(val_losses)
 
         # change categorical
-        batch_train_loss = Unet.loss(
-            train_masks, mask_to_categorical(train_results)
-        )
-        
-        # change categorical
-        batch_val_loss = Unet.loss(
-            val_masks, mask_to_categorical(val_results)
+        train_size = len(train_masks)
+        batch_train_loss = LossValidateCallback.IOU_loss(
+            mask_to_categorical(train_masks, train_size), train_results
         )
 
-        eval_train_loss, _ = self.model.evaluate(train_imgs, train_masks)
-        eval_val_loss, _ = self.model.evaluate(val_imgs, val_masks)
+        # change categorical
+        val_size = len(val_masks)
+        batch_val_loss = LossValidateCallback.IOU_loss(
+            mask_to_categorical(val_masks, val_size), val_results
+        )
+
+        eval_train_loss, _ = self.model.evaluate(
+            train_imgs, mask_to_categorical(train_masks, train_size)
+        )
+        eval_val_loss, _ = self.model.evaluate(
+            val_imgs, mask_to_categorical(val_masks, val_size)
+        )
 
         text = 'epoch: {0} evaluation: train_loss: {1}, ' \
                'validation loss: {2}, '.format(
