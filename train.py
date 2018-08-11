@@ -4,6 +4,7 @@ import numpy as np
 
 from keras.callbacks import ModelCheckpoint, Callback
 from keras.optimizers import Adam
+from keras.utils import to_categorical
 
 # from networks.unet_mask_out import Unet
 from networks.unet import Unet
@@ -100,9 +101,21 @@ def train(data_dir, val_data_dir, results_file, model_info=None):
         period=50
     )
 
+    def get_batch():
+        while True:
+            x, mask = next(batch_gen.train_batches)
+            mask = to_categorical(mask, 2)
+            mask = np.reshape(
+                mask,
+                (
+                    batch_gen.batch_size, IMG_COLS*IMG_ROWS, 2
+                )
+            )
+            yield x, mask
+
     model.fit_generator(
-        batch_gen.train_batches,
-        steps_per_epoch=2e3,
+        get_batch, # batch_gen.train_batches,
+        steps_per_epoch=1e3,
         epochs=NB_EPOCHS,
         callbacks=[
             checkpoint,

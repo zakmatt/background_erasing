@@ -123,7 +123,7 @@ class Unet(object):
         conv16 = Convolution2D(filters=2, kernel_size=(1, 1),
                                activation='linear')(conv15)
 
-        flat_output = Reshape((img_cols*img_rows), 2)(conv16)
+        flat_output = Reshape((img_cols*img_rows, 2))(conv16)
         softmax_output = Activation('softmax')(flat_output)
 
         model = Model(inputs=inputs, outputs=softmax_output)
