@@ -84,7 +84,7 @@ def train(data_dir, val_data_dir, results_file, model_info=None):
     model = Unet.model(IMG_ROWS, IMG_COLS)
     model.compile(
         optimizer=Adam(lr=1e-4),
-        loss=Unet.loss,
+        loss='categorical_crossentropy',  # Unet.loss,
         metrics=[Unet.metric]
     )
     initial_epoch = 0
