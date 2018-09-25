@@ -5,14 +5,16 @@ from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
 
 
-class Augment(object):
+class Augmentor(object):
     """Data augmnentation class
 
         A static class containing methods serving for data augmentation;
         - brightness augmentation
         - image stretching
         - image translation
+        - blurring
         - mirror reflection
+        - elastic image transformation
 
     """
 
@@ -29,28 +31,80 @@ class Augment(object):
         return image
 
     @staticmethod
-    def change_contrast(image):
+    def augment_translate(image, mask, trans_range):
+        """Translate an image and a mask
+
+        :param image: input image to translate
+        :param mask: input mask to translate
+        :param trans_range: applied translation range; same for image and mask
+        :return: translated image and mask
         """
+        assert image.shape == mask.shape
 
-        :return:
-        """
-        factor = (255 - 100 * np.random.uniform()) / (
-            255 + 100 * np.random.uniform()
-        )
-
-        def contrast(c):
-            return 128 + factor * (c - 128)
-
-        return image.astype(np.uint8)
+        tr_x = trans_range * np.random.uniform() - trans_range / 2
+        tr_y = trans_range * np.random.uniform() - trans_range / 2
+        trans_M = np.array([[1, 0, tr_x], [0, 1, tr_y]], dtype=np.float32)
+        width, height, _ = image.shape
+        image = cv2.warpAffine(image, trans_M, (width, height))
+        mask = cv2.warpAffine(mask, trans_M, (width, height))
+        return image, mask
 
     @staticmethod
-    def mirror(image):
-        """Mirror reflection of an input image
+    def augment_stretch(img, mask, scale_range):
+        """Streatch an image and a mask
+
+        :param image: input image to translate
+        :param mask: input mask to translate
+        :param scale_range: applied streatching range; same for image and mask
+        :return: streatched image and mask
+        """
+        assert img.shape == mask.shape
+
+        tr_x1 = scale_range * np.random.uniform()
+        tr_y1 = scale_range * np.random.uniform()
+        p1 = (tr_x1, tr_y1)
+        tr_x2 = scale_range * np.random.uniform()
+        tr_y2 = scale_range * np.random.uniform()
+        p2 = (img.shape[0] - tr_x2, tr_y1)
+
+        p3 = (img.shape[0] - tr_x2, img.shape[1] - tr_y2)
+        p4 = (tr_x1, img.shape[1] - tr_y2)
+
+        pts1 = np.float32([[p1[0], p1[1]],
+                           [p2[0], p2[1]],
+                           [p3[0], p3[1]],
+                           [p4[0], p4[1]]])
+        pts2 = np.float32([[0, 0],
+                           [img.shape[1], 0],
+                           [img.shape[1], img.shape[0]],
+                           [0, img.shape[0]]]
+                          )
+
+        M = cv2.getPerspectiveTransform(pts1, pts2)
+        img = cv2.warpPerspective(img, M, (img.shape[0], img.shape[1]))
+        img = np.array(img, dtype=np.uint8)
+        mask = cv2.warpPerspective(mask, M, (mask.shape[0], mask.shape[1]))
+        mask = np.array(mask, dtype=np.uint8)
+
+        return img, mask
+
+    @staticmethod
+    def blur(image):
+        """Blur an input image
 
         :return: image
         """
 
-        return image[::-1]
+        return cv2.blur(image, (5, 5))
+
+    @staticmethod
+    def mirror(image):
+        """Get a mirror reflection of an image
+
+        :return: image
+        """
+
+        return cv2.flip(image, 1)
 
 
     # using this method is not fully recommended as the transformation time is
