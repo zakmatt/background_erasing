@@ -1,5 +1,5 @@
 import glob
-import imageio
+import cv2
 import numpy as np
 import os
 
@@ -118,8 +118,9 @@ class BatchGenerator(object):
                 not os.path.isfile(mask_path):
             return None, None
 
-        img = imageio.imread(img_path).astype(np.float32)
-        mask = imageio.imread(mask_path).astype(np.float32)
+        img = cv2.imread(img_path).astype(np.float32)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        mask = cv2.imread(mask_path).astype(np.float32)
         mask[mask < 128] = 0.
         mask[mask >= 128] = 1.
         if len(mask.shape) == 2:
