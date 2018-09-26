@@ -14,7 +14,7 @@ from utils.batch_generator import BatchGenerator
 BATCH_SIZE = 1
 VAL_BATCH = 150
 IMG_ROWS, IMG_COLS = 256, 256
-NB_EPOCHS = 1000
+NB_EPOCHS = 10#00
 
 
 def mask_to_categorical(masks, batch_size=1):
@@ -95,22 +95,29 @@ class LossValidateCallback(Callback):
             val_imgs, mask_to_categorical(val_masks, val_size)
         )
 
-        text = 'epoch: {0} evaluation: train_loss: {1}, ' \
-               'validation loss: {2}, '.format(
-                   epoch, eval_train_loss, eval_val_loss)
-        text += 'batch eval: train loss: {0} validation loss: {1}, '.format(
-            batch_train_loss, batch_val_loss
+        text = '{0}, {1}, {2}, '.format(epoch, eval_train_loss, eval_val_loss)
+        text += '{0}, {1}, '.format(batch_train_loss, batch_val_loss)
+        text += '{0}, {1}, {2}, {3}\n'.format(
+            average_train_loss, std_train_loss,
+            average_val_loss, std_val_loss
         )
-        text += 'batch stats: train avg loss: {0}, train std loss: {1}, ' \
-                'val avg loss: {2}, val std loss: {3}\n'.format(
-                    average_train_loss, std_train_loss,
-                    average_val_loss, std_val_loss
-                )
+        if not os.path.exists(self.results_file):
+            with open(self.results_file, 'w') as file:
+                columns = 'epoch, eval_train_loss, eval_validation_loss, '
+                columns += 'batch_train_loss, batch_val_loss, '
+                columns += 'batch_stats_train_avg_loss, '
+                columns += 'batch_stats_train_std_loss, '
+                columns += 'batch_stats_val_avg_loss, '
+                columns += 'batch_stats_val_std_loss\n'
+                file.writelines(columns)
+
         with open(self.results_file, 'a') as file:
             file.writelines(text)
 
 
-def train(data_dir, val_data_dir, results_file, model_info=None):
+def train(
+        data_dir, val_data_dir, results_file, save_model_dir, model_info=None
+):
     batch_gen = BatchGenerator(
         data_dir=data_dir, val_data_dir=val_data_dir, batch_size=BATCH_SIZE
     )
@@ -128,8 +135,9 @@ def train(data_dir, val_data_dir, results_file, model_info=None):
         if model_info['initial_epoch']:
             initial_epoch = model_info['initial_epoch']
 
+    f_path = str(save_model_dir) + '/deep_unet_batch_1_epoch_{epoch:02d}.hdf5'
     checkpoint = ModelCheckpoint(
-        filepath='deep_unet_batch_1_epoch_{epoch:02d}.hdf5',
+        filepath=f_path,
         mode='auto',
         period=50
     )
@@ -148,7 +156,7 @@ def train(data_dir, val_data_dir, results_file, model_info=None):
 
     model.fit_generator(
         get_batch(), # batch_gen.train_batches,
-        steps_per_epoch=1e3,
+        steps_per_epoch=10,#e3,
         epochs=NB_EPOCHS,
         callbacks=[
             checkpoint,
@@ -183,12 +191,26 @@ if __name__ == '__main__':
                         "--initial_epoch",
                         help='Initial epoch #',
                         required=False)
+    parser.add_argument("-s",
+                        "--save_model_dir",
+                        help='Save model dir',
+                        required=False)
     args = parser.parse_args()
     data_dir = args.data_dir
     val_data_dir = args.val_data_dir
     results_file = args.results_file
     weights_path = args.weights_path
     initial_epoch = args.initial_epoch
+    save_model_dir = args.save_model_dir
+
+    if not save_model_dir:
+        save_model_dir = '.'
+    else:
+        save_model_dir = str(save_model_dir)
+        if save_model_dir[-1] == '/':
+            save_model_dir = save_model_dir[:-1]
+        if not os.path.isdir(save_model_dir):
+            os.makedirs(save_model_dir)
 
     if weights_path:
         model_info = {}
@@ -197,6 +219,6 @@ if __name__ == '__main__':
         if initial_epoch:
             initial_epoch = int(initial_epoch)
             model_info['initial_epoch'] = initial_epoch
-        train(data_dir, val_data_dir, results_file, model_info)
+        train(data_dir, val_data_dir, results_file, save_model_dir, model_info)
     else:
-        train(data_dir, val_data_dir, results_file)
+        train(data_dir, val_data_dir, results_file, save_model_dir)
