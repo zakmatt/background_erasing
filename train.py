@@ -14,7 +14,7 @@ from utils.batch_generator import BatchGenerator
 BATCH_SIZE = 1
 VAL_BATCH = 150
 IMG_ROWS, IMG_COLS = 256, 256
-NB_EPOCHS = 10#00
+NB_EPOCHS = 1000
 
 
 def mask_to_categorical(masks, batch_size=1):
@@ -156,7 +156,7 @@ def train(
 
     model.fit_generator(
         get_batch(), # batch_gen.train_batches,
-        steps_per_epoch=10,#e3,
+        steps_per_epoch=1e3,
         epochs=NB_EPOCHS,
         callbacks=[
             checkpoint,
