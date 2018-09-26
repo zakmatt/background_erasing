@@ -106,10 +106,8 @@ class Augmentor(object):
 
         return cv2.flip(image, 1)
 
-
     # using this method is not fully recommended as the transformation time is
     # pretty long this it will slow down the training process
-
     @staticmethod
     def elastic_transform(image, mask, alpha, sigma, alpha_affine,
                           random_state=None):
@@ -148,7 +146,6 @@ class Augmentor(object):
                              sigma) * alpha
         dy = gaussian_filter((random_state.rand(*shape) * 2 - 1),
                              sigma) * alpha
-        dz = np.zeros_like(dx)
 
         x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]),
                               np.arange(shape[2]))
