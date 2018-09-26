@@ -39,7 +39,7 @@ class Augmentor(object):
         :param trans_range: applied translation range; same for image and mask
         :return: translated image and mask
         """
-        assert image.shape == mask.shape
+        assert image.shape[:2] == mask.shape
 
         tr_x = trans_range * np.random.uniform() - trans_range / 2
         tr_y = trans_range * np.random.uniform() - trans_range / 2
@@ -58,7 +58,7 @@ class Augmentor(object):
         :param scale_range: applied streatching range; same for image and mask
         :return: streatched image and mask
         """
-        assert img.shape == mask.shape
+        assert img.shape[:2] == mask.shape
 
         tr_x1 = scale_range * np.random.uniform()
         tr_y1 = scale_range * np.random.uniform()

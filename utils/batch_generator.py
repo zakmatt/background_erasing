@@ -4,6 +4,9 @@ import numpy as np
 import os
 
 from math import ceil
+from numpy.random import randint, normal
+
+from utils.augmentation_methods import Augmentor
 
 
 class NoDataPath(Exception):
@@ -21,7 +24,7 @@ class BatchGenerator(object):
         self._train_batch_pos = 0
         self._test_batch_pos = 0
 
-        if type(batch_size) is not int:
+        if not isinstance(batch_size, int):
             raise TypeError()
 
         self._batch_size = batch_size
@@ -96,7 +99,7 @@ class BatchGenerator(object):
 
     @batch_size.setter
     def batch_size(self, batch_size):
-        if type(batch_size) is not int:
+        if not isinstance(batch_size, int):
             raise TypeError()
 
         self._batch_size = batch_size
@@ -110,6 +113,32 @@ class BatchGenerator(object):
         return self._num_batches
 
     @staticmethod
+    def _augment(image, mask):
+        # generate options from 0 to 5
+        # 0 means do nothing
+        rnd_selection = randint(6)
+
+        if rnd_selection == 1:
+            # brightness
+            image = Augmentor.augment_brightness(image)
+        if rnd_selection == 2:
+            # translation
+            image, mask = Augmentor.augment_translate(
+                image, mask, normal(50, 25)
+            )
+        if rnd_selection == 3:
+            image, mask = Augmentor.augment_stretch(
+                image, mask, normal(30, 10)
+            )
+        if rnd_selection == 4:
+            image = Augmentor.blur(image)
+        if rnd_selection == 5:
+            image = Augmentor.mirror(image)
+            mask = Augmentor.mirror(mask)
+
+        return image, mask
+
+    @staticmethod
     def read_images(img_pair):
         img_path, mask_path = img_pair
 
@@ -118,9 +147,17 @@ class BatchGenerator(object):
                 not os.path.isfile(mask_path):
             return None, None
 
-        img = cv2.imread(img_path).astype(np.float32)
+        img = cv2.imread(img_path)
+        # change channels from B,R,G to R,G,B
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        mask = cv2.imread(mask_path).astype(np.float32)
+        mask = cv2.imread(mask_path, 0)
+
+        # augment pair
+        img, mask = BatchGenerator._augment(img, mask)
+
+        # change types from uint8 to float32
+        img = img.astype(np.float32)
+        mask = mask.astype(np.float32)
         mask[mask < 128] = 0.
         mask[mask >= 128] = 1.
         if len(mask.shape) == 2:
