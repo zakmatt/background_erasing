@@ -116,10 +116,10 @@ class LossValidateCallback(Callback):
 
 
 def train(
-        data_dir, val_data_dir, results_file, save_model_dir, model_info=None
+        data_dir, val_dir, results_file, save_model_dir, model_info=None
 ):
     batch_gen = BatchGenerator(
-        data_dir=data_dir, val_data_dir=val_data_dir, batch_size=BATCH_SIZE
+        data_dir=data_dir, val_dir=val_dir, batch_size=BATCH_SIZE
     )
     batch_gen.load_data()
     model = Unet.model(IMG_ROWS, IMG_COLS)
@@ -176,7 +176,7 @@ if __name__ == '__main__':
                         help='Training data directory',
                         required=True)
     parser.add_argument("-v",
-                        "--val_data_dir",
+                        "--val_dir",
                         help='Validation data directory',
                         required=True)
     parser.add_argument("-r",
@@ -197,7 +197,7 @@ if __name__ == '__main__':
                         required=False)
     args = parser.parse_args()
     data_dir = args.data_dir
-    val_data_dir = args.val_data_dir
+    val_dir = args.val_dir
     results_file = args.results_file
     weights_path = args.weights_path
     initial_epoch = args.initial_epoch
@@ -219,6 +219,6 @@ if __name__ == '__main__':
         if initial_epoch:
             initial_epoch = int(initial_epoch)
             model_info['initial_epoch'] = initial_epoch
-        train(data_dir, val_data_dir, results_file, save_model_dir, model_info)
+        train(data_dir, val_dir, results_file, save_model_dir, model_info)
     else:
-        train(data_dir, val_data_dir, results_file, save_model_dir)
+        train(data_dir, val_dir, results_file, save_model_dir)
