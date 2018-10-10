@@ -20,7 +20,7 @@ class DirecotryNotExisting(Exception):
 class BatchGenerator(object):
     """Class generating image batches"""
 
-    def __init__(self, data_dir, val_data_dir, batch_size=1):
+    def __init__(self, data_dir, val_dir, batch_size=1):
         self._train_batch_pos = 0
         self._test_batch_pos = 0
 
@@ -36,7 +36,7 @@ class BatchGenerator(object):
             raise DirecotryNotExisting()
 
         self._data_dir = data_dir
-        self._val_data_dir = val_data_dir
+        self._val_dir = val_dir
 
     @staticmethod
     def _get_files_names(data_dir):
@@ -86,8 +86,8 @@ class BatchGenerator(object):
 
         self._data_dir = data_dir
 
-    @data_dir.setter
-    def val_data_dir(self, val_data_dir):
+    @val_dir.setter
+    def val_dir(self, val_data_dir):
         if not val_data_dir:
             raise NoDataPath()
 
