@@ -20,7 +20,7 @@ class DirecotryNotExisting(Exception):
 class BatchGenerator(object):
     """Class generating image batches"""
 
-    def __init__(self, data_dir, val_dir, batch_size=1):
+    def __init__(self, data_dir, val_dir=None, batch_size=1):
         self._train_batch_pos = 0
         self._test_batch_pos = 0
 
@@ -36,7 +36,7 @@ class BatchGenerator(object):
             raise DirecotryNotExisting()
 
         self._data_dir = data_dir
-        self._val_dir = val_dir
+        self._val_data_dir = val_dir
 
     @staticmethod
     def _get_files_names(data_dir):
@@ -60,9 +60,10 @@ class BatchGenerator(object):
         """
 
         train_files = BatchGenerator._get_files_names(self._data_dir)
-        val_files = BatchGenerator._get_files_names(self._val_data_dir)
         self._images_pairs = np.array(train_files)
-        self._val_images_pairs = np.array(val_files)
+        if self._val_data_dir:
+            val_files = BatchGenerator._get_files_names(self._val_data_dir)
+            self._val_images_pairs = np.array(val_files)
         self._dataset_size = len(train_files)
         self._batch_size = (
             self._batch_size if self.batch_size < len(train_files)
@@ -205,10 +206,12 @@ class BatchGenerator(object):
             )
         train_idx = idxs(self._images_pairs)
         train_pairs = self._images_pairs[train_idx]
-        val_idx = idxs(self._val_images_pairs)
-        val_pairs = self._val_images_pairs[val_idx]
-
         train_batch = BatchGenerator._read_batch_pairs(train_pairs)
-        val_batch = BatchGenerator._read_batch_pairs(val_pairs)
 
-        return train_batch, val_batch
+        if hasattr(self, '_val_images_pairs'):
+            val_idx = idxs(self._val_images_pairs)
+            val_pairs = self._val_images_pairs[val_idx]
+            val_batch = BatchGenerator._read_batch_pairs(val_pairs)
+            return train_batch, val_batch
+
+        return train_batch

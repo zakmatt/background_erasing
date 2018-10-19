@@ -1,4 +1,8 @@
+import numpy as np
+import os
+
 from keras import backend as K
+from keras.callbacks import ModelCheckpoint
 from keras.layers import (
     Activation,
     Input,
@@ -9,9 +13,46 @@ from keras.layers import (
     UpSampling2D,
 )
 from keras.models import Model
+from keras.optimizers import Adam
+from keras.utils import to_categorical
+
+from utils.loss_validate_callback import LossValidateCallback
 
 
 class Unet(object):
+
+    def __init__(self, img_rows, img_cols, batch_gen,
+                 save_model_dir, results_file, val_batch_size):
+        self.img_rows = img_rows
+        self.img_cols = img_cols
+        self.batch_gen = batch_gen
+        self.model = Unet.model(img_rows, img_cols)
+        self.model.compile(
+            optimizer=Adam(lr=1e-4),
+            loss='categorical_crossentropy',  # Unet.loss,
+            metrics=[Unet.metric]
+        )
+
+        f_path = str(
+            save_model_dir
+        ) + '/deep_unet_batch_1_epoch_{epoch:02d}.hdf5'
+
+        checkpoint = ModelCheckpoint(
+            filepath=f_path,
+            mode='auto',
+            period=50
+        )
+        results_file = os.path.join(save_model_dir, results_file)
+        self.callbacks = [
+            checkpoint,
+            LossValidateCallback(
+                batch_gen.generate_test_batch,
+                results_file,
+                val_batch_size=val_batch_size,
+                to_categ=True
+            )
+        ]
+
     @staticmethod
     def model(img_rows, img_cols):
         inputs = Input(shape=(img_rows, img_cols, 3))
@@ -129,6 +170,30 @@ class Unet(object):
         model = Model(inputs=inputs, outputs=softmax_output)
 
         return model
+
+    def _get_batch(self):
+        while True:
+            x, mask = next(self.batch_gen.train_batches)
+            mask = to_categorical(mask, 2)
+            mask = np.reshape(
+                mask,
+                (
+                    self.batch_gen.batch_size, self.img_cols*self.img_rows, 2
+                )
+            )
+            yield x, mask
+
+    def train(self, initial_epoch, nb_epochs):
+        self.model.fit_generator(
+            self._get_batch(),  # batch_gen.train_batches,
+            steps_per_epoch=1e3,
+            epochs=nb_epochs,
+            callbacks=self.callbacks,
+            initial_epoch=initial_epoch
+        )
+
+    def load_weights(self, weights_path):
+        self.model.load_weights(weights_path)
 
     @staticmethod
     def metric(y_true, y_false, smooth=1.):
