@@ -39,7 +39,8 @@ class DCGAN(object):
         self.img_shape = (self.img_rows, self.img_cols, self.img_channels)
         self.mask_shape = (self.img_rows, self.img_cols, self.mask_channels)
         self.discriminator_input_shape = (
-            self.img_rows, self.img_cols, self.img_channels + self.mask_channels
+            self.img_rows, self.img_cols,
+            self.img_channels + self.mask_channels
         )
 
         self.batch_generator = batch_gen
