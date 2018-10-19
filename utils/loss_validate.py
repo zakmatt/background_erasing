@@ -81,9 +81,9 @@ class LossValidate(object):
             return mask_to_categorical(
                 masks=masks, batch_size=batch_size,
                 img_cols=self.img_cols, img_rows=self.img_rows
-            )
+            ).astype(np.float32)
 
-        return masks
+        return masks.astype(np.float32)
 
     def error_log(self, epoch):
         train_batch, val_batch = self.generate_test_batch(
@@ -114,23 +114,25 @@ class LossValidate(object):
         average_val_loss = np.average(val_losses)
         std_val_loss = np.std(val_losses)
 
-        # change categorical
+        # change categorical if needed
         train_size = len(train_masks)
+        train_masks = self._mask_to_categorical(train_masks, train_size)
         batch_train_loss = LossValidate.IOU_loss(
-            self._mask_to_categorical(train_masks, train_size), train_results
+            train_masks, train_results
         )
 
-        # change categorical
+        # change categorical if needed
         val_size = len(val_masks)
+        val_masks = self._mask_to_categorical(val_masks, val_size)
         batch_val_loss = LossValidate.IOU_loss(
-            self._mask_to_categorical(val_masks, val_size), val_results
+            val_masks, val_results
         )
 
-        eval_train_loss, _ = self.model.evaluate(
-            train_imgs, self._mask_to_categorical(train_masks, train_size)
+        eval_train_loss = self.model.evaluate(
+            train_imgs, train_masks
         )
-        eval_val_loss, _ = self.model.evaluate(
-            val_imgs, self._mask_to_categorical(val_masks, val_size)
+        eval_val_loss = self.model.evaluate(
+            val_imgs, val_masks
         )
 
         text = '{0}, {1}, {2}, '.format(epoch, eval_train_loss, eval_val_loss)

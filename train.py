@@ -2,7 +2,8 @@ import argparse
 import os
 
 # from networks.unet_mask_out import Unet
-from networks.unet import Unet
+#from networks.unet import Unet
+from networks.DCGAN import DCGAN
 
 from utils.batch_generator import BatchGenerator
 
@@ -19,8 +20,8 @@ def train(
         data_dir=data_dir, val_dir=val_dir, batch_size=BATCH_SIZE
     )
     batch_gen.load_data()
-    model = Unet(IMG_ROWS, IMG_COLS, batch_gen,
-                 save_model_dir, results_file, VAL_BATCH)
+    model = DCGAN(IMG_ROWS, IMG_COLS, batch_gen,
+                  save_model_dir, results_file, VAL_BATCH)
 
     initial_epoch = 0
     if model_info:
@@ -29,7 +30,7 @@ def train(
         if model_info['initial_epoch']:
             initial_epoch = model_info['initial_epoch']
 
-    model.train(initial_epoch, NB_EPOCHS)
+    model.train(initial_epoch, NB_EPOCHS, 10)
 
 
 if __name__ == '__main__':
