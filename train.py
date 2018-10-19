@@ -1,8 +1,6 @@
 import argparse
 import os
 
-# from networks.unet_mask_out import Unet
-#from networks.unet import Unet
 from networks.DCGAN import DCGAN
 
 from utils.batch_generator import BatchGenerator
@@ -16,6 +14,19 @@ NB_EPOCHS = 1000
 def train(
         data_dir, val_dir, results_file, save_model_dir, model_info=None
 ):
+    """Model training main script
+
+    :param data_dir: Directory to a training dataset
+    :type data_dir: str
+    :param val_dir: Directory to a validation dataset
+    :param results_file: name of a file where the results are to be stored
+    :param save_model_dir: path to a place where the results are to be saved
+    :param model_info: information whether we start training from a particular
+    epoch and with pretrained weights
+    :type model_info: dict
+    :return:
+    """
+
     batch_gen = BatchGenerator(
         data_dir=data_dir, val_dir=val_dir, batch_size=BATCH_SIZE
     )
@@ -30,7 +41,7 @@ def train(
         if model_info['initial_epoch']:
             initial_epoch = model_info['initial_epoch']
 
-    model.train(initial_epoch, NB_EPOCHS, 10)
+    model.train(initial_epoch, NB_EPOCHS)
 
 
 if __name__ == '__main__':
