@@ -286,8 +286,20 @@ class DCGAN(object):
             -(K.log(predict_real + EPS) + K.log(1 - predict_fake + EPS))
         )
 
-    def load_weights(self, weights_path):
-        self.model.load_weights(weights_path)
+    def load_weights(self, initial_epoch):
+        if os.path.isfile(self.dcgan_weights_path.format(initial_epoch)):
+            self.combined_model.load_weights(
+                self.dcgan_weights_path.format(initial_epoch)
+            )
+        if os.path.isfile(self.generator_weights_path.format(initial_epoch)):
+            self.generator.load_weights(
+                self.generator_weights_path.format(initial_epoch)
+            )
+        if os.path.isfile(
+                self.discriminator_weights_path.format(initial_epoch)):
+            self.discriminator.load_weights(
+                self.discriminator_weights_path.format(initial_epoch)
+            )
 
     def train(self, initial_epoch, nb_epochs, steps_per_epoch=int(1e3)):
         """Model training method"""
