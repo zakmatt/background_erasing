@@ -52,13 +52,13 @@ if __name__ == '__main__':
                         "--results_file",
                         help='Metrics results file path',
                         required=True)
-    parser.add_argument("-w",
-                        "--weights_path",
-                        help='Pretrained model weights',
-                        required=False)
     parser.add_argument("-e",
                         "--initial_epoch",
                         help='Initial epoch #',
+                        required=False)
+    parser.add_argument("-s",
+                        "--save_model_dir",
+                        help='Save model dir',
                         required=False)
     args = parser.parse_args()
     data_dir = args.data_dir
