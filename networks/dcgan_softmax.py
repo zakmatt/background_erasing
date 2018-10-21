@@ -210,9 +210,13 @@ class DCGAN_softmax(DCGAN):
             # log error value
             self.loss_validate.error_log(epoch)
 
-            if epoch % 1 == 0:
-                self.combined_model.save_weights(self.dcgan_weights_path)
-                self.generator.save_weights(self.generator_weights_path)
+            if epoch % 50 == 0:
+                self.combined_model.save_weights(
+                    self.dcgan_weights_path.format(epoch)
+                )
+                self.generator.save_weights(
+                    self.generator_weights_path.format(epoch)
+                )
                 self.discriminator.save_weights(
-                    self.discriminator_weights_path
+                    self.discriminator_weights_path.format(epoch)
                 )
