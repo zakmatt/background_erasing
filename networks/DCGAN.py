@@ -13,6 +13,7 @@ from keras.layers import (
     Input,
     LeakyReLU,
     ReLU,
+    Reshape,
     ZeroPadding2D
 )
 from keras.models import Model
@@ -57,7 +58,7 @@ class DCGAN(object):
         # build a generator
         self.generator = self._generator(64)
         self.generator.compile(
-            loss=DCGAN._generator_l1_loss,
+            loss=self._generator_l1_loss,
             optimizer=Adam(0.0002, 0.5)
         )
 
@@ -78,6 +79,7 @@ class DCGAN(object):
 
         # The discriminator takes generated masks with images
         #  as input and determines validity
+        generated_mask = Reshape(self.mask_shape)(generated_mask)
         combined_inputs_fake = Concatenate(axis=-1)([image, generated_mask])
 
         # return patch o 1's and 0's
@@ -85,7 +87,7 @@ class DCGAN(object):
         self.combined_model = Model(inputs=image, outputs=combined_inputs_fake)
         self.combined_model.compile(
             optimizer=Adam(0.0002, 0.5),
-            loss=DCGAN._generator_loss(discrim_fake)
+            loss=self._generator_loss(discrim_fake)
         )
 
         # build logs
@@ -95,6 +97,42 @@ class DCGAN(object):
             results_file,
             val_batch_size=val_batch_size
         )
+
+    @property
+    def img_rows(self):
+        return self._img_rows
+
+    @img_rows.setter
+    def img_rows(self, value):
+        if not hasattr(self, '_img_rows'):
+            self._img_rows = value
+
+    @property
+    def img_cols(self):
+        return self._img_cols
+
+    @img_cols.setter
+    def img_cols(self, value):
+        if not hasattr(self, '_img_cols'):
+            self._img_cols = value
+
+    @property
+    def img_channels(self):
+        return self._img_channels
+
+    @img_channels.setter
+    def img_channels(self, value):
+        if not hasattr(self, '_img_channels'):
+            self._img_channels = value
+
+    @property
+    def mask_channels(self):
+        return self._mask_channels
+
+    @mask_channels.setter
+    def mask_channels(self, value):
+        if not hasattr(self, '_mask_channels'):
+            self._mask_channels = value
 
     def _generator(self, n_filters):
         """Generator method"""
@@ -175,13 +213,11 @@ class DCGAN(object):
         layers.append(output)
         return Model(inputs=inputs, outputs=output)
 
-    @staticmethod
-    def _generator_l1_loss(targets, generated):
-        gen_loss_l1 = K.mean(K.abs(targets - generated))
-        return gen_loss_l1
+    def _generator_l1_loss(self, generated, targets):
+        return K.mean(K.abs(targets - generated))
 
-    @staticmethod
-    def _generator_loss(predict_fake,
+    def _generator_loss(self,
+                        predict_fake,
                         gan_weight=1.0,
                         l1_weight=100):
         # predict_fake => 1
@@ -189,7 +225,7 @@ class DCGAN(object):
         gen_loss_gan = K.mean(-K.log(predict_fake + EPS))
 
         def loss(targets, generated):
-            gen_loss_l1 = K.mean(K.abs(targets - generated))
+            gen_loss_l1 = self._generator_l1_loss(generated, targets)
             gen_loss = gen_loss_gan * gan_weight + gen_loss_l1 * l1_weight
             return gen_loss
         return loss
