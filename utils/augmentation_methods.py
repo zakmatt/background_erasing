@@ -46,7 +46,8 @@ class Augmentor(object):
         trans_M = np.array([[1, 0, tr_x], [0, 1, tr_y]], dtype=np.float32)
         width, height, _ = image.shape
         image = cv2.warpAffine(image, trans_M, (width, height))
-        mask = cv2.warpAffine(mask, trans_M, (width, height))
+        if mask is not None:
+            mask = cv2.warpAffine(mask, trans_M, (width, height))
         return image, mask
 
     @staticmethod
@@ -83,8 +84,9 @@ class Augmentor(object):
         M = cv2.getPerspectiveTransform(pts1, pts2)
         img = cv2.warpPerspective(img, M, (img.shape[0], img.shape[1]))
         img = np.array(img, dtype=np.uint8)
-        mask = cv2.warpPerspective(mask, M, (mask.shape[0], mask.shape[1]))
-        mask = np.array(mask, dtype=np.uint8)
+        if mask is not None:
+            mask = cv2.warpPerspective(mask, M, (mask.shape[0], mask.shape[1]))
+            mask = np.array(mask, dtype=np.uint8)
 
         return img, mask
 
@@ -137,10 +139,6 @@ class Augmentor(object):
         pts2 = pts1 + random_state.uniform(-alpha_affine, alpha_affine,
                                            size=pts1.shape).astype(np.float32)
         M = cv2.getAffineTransform(pts1, pts2)
-        image = cv2.warpAffine(image, M, shape_size[::-1],
-                               borderMode=cv2.BORDER_REFLECT_101)
-        mask = cv2.warpAffine(mask, M, shape_size[::-1],
-                              borderMode=cv2.BORDER_REFLECT_101)
 
         dx = gaussian_filter((random_state.rand(*shape) * 2 - 1),
                              sigma) * alpha
@@ -149,13 +147,19 @@ class Augmentor(object):
 
         x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]),
                               np.arange(shape[2]))
-        indices = np.reshape(y + dy, (-1, 1)), np.reshape(x + dx,
-                                                          (-1, 1)), np.reshape(
-            z, (-1, 1))
+        indices = np.reshape(y + dy, (-1, 1)), np.reshape(
+            x + dx, (-1, 1)), np.reshape(z, (-1, 1))
+
+        image = cv2.warpAffine(image, M, shape_size[::-1],
+                               borderMode=cv2.BORDER_REFLECT_101)
 
         image = map_coordinates(image, indices, order=1,
                                 mode='reflect').reshape(shape)
-        mask = map_coordinates(mask, indices, order=1, mode='reflect').reshape(
-            shape)
+        if mask is not None:
+            mask = cv2.warpAffine(mask, M, shape_size[::-1],
+                                  borderMode=cv2.BORDER_REFLECT_101)
+            mask = map_coordinates(
+                mask, indices, order=1, mode='reflect'
+            ).reshape(shape)
 
         return image, mask

@@ -29,7 +29,7 @@ class Unet(object):
         self.model = Unet.model(img_rows, img_cols)
         self.model.compile(
             optimizer=Adam(lr=1e-4),
-            loss='categorical_crossentropy',  # Unet.loss,
+            loss='categorical_crossentropy',
             metrics=[Unet.metric]
         )
 
@@ -183,10 +183,10 @@ class Unet(object):
             )
             yield x, mask
 
-    def train(self, initial_epoch, nb_epochs):
+    def train(self, initial_epoch, nb_epochs, steps_per_epoch):
         self.model.fit_generator(
-            self._get_batch(),  # batch_gen.train_batches,
-            steps_per_epoch=1e3,
+            self._get_batch(),
+            steps_per_epoch=steps_per_epoch,
             epochs=nb_epochs,
             callbacks=self.callbacks,
             initial_epoch=initial_epoch

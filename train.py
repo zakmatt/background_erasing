@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from networks.DCGAN import DCGAN
+from networks.unet import Unet
 
 from utils.batch_generator import BatchGenerator
 
@@ -9,14 +9,16 @@ BATCH_SIZE = 1
 VAL_BATCH = 150
 IMG_ROWS, IMG_COLS = 256, 256
 NB_EPOCHS = 1000
+STEPS_PER_EPOCH = 1e3
 
 
-def train(data_dir, val_dir, results_file, save_model_dir, initial_epoch=0):
+def train(data, validation, results_file,
+          save_model_dir, steps_per_epoch, initial_epoch=0):
     """Model training main script
 
-    :param data_dir: Directory to a training dataset
-    :type data_dir: str
-    :param val_dir: Directory to a validation dataset
+    :param data: dataset
+    :param validation: Dataset split portion for validation
+    :type validation: float
     :param results_file: name of a file where the results are to be stored
     :param save_model_dir: path to a place where the results are to be saved
     :param model_info: information whether we start training from a particular
@@ -26,16 +28,15 @@ def train(data_dir, val_dir, results_file, save_model_dir, initial_epoch=0):
     """
 
     batch_gen = BatchGenerator(
-        data_dir=data_dir, val_dir=val_dir, batch_size=BATCH_SIZE
+        data=data, validate=validation, batch_size=BATCH_SIZE
     )
-    batch_gen.load_data()
-    model = DCGAN(IMG_ROWS, IMG_COLS, batch_gen,
-                  save_model_dir, results_file, VAL_BATCH)
+    model = Unet(IMG_ROWS, IMG_COLS, batch_gen,
+                 save_model_dir, results_file, VAL_BATCH)
 
     if initial_epoch > 0:
         model.load_weights(initial_epoch)
 
-    model.train(initial_epoch, NB_EPOCHS)
+    model.train(initial_epoch, NB_EPOCHS, steps_per_epoch)
 
 
 if __name__ == '__main__':
