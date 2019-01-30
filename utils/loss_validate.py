@@ -128,26 +128,17 @@ class LossValidate(object):
             val_masks, val_results
         )
 
-        eval_train_loss = self.model.evaluate(
-            train_imgs, train_masks
-        )
-        eval_val_loss = self.model.evaluate(
-            val_imgs, val_masks
-        )
-
-        text = '{0}, {1}, {2}, '.format(epoch, eval_train_loss, eval_val_loss)
-        text += '{0}, {1}, '.format(batch_train_loss, batch_val_loss)
-        text += '{0}, {1}, {2}, {3}\n'.format(
+        text = '{0},{1},{2},'.format(epoch, batch_train_loss, batch_val_loss)
+        text += '{0},{1},{2},{3}\n'.format(
             average_train_loss, std_train_loss,
             average_val_loss, std_val_loss
         )
         if not os.path.exists(self.results_file):
             with open(self.results_file, 'w') as file:
-                columns = 'epoch, eval_train_loss, eval_validation_loss, '
-                columns += 'batch_train_loss, batch_val_loss, '
-                columns += 'batch_stats_train_avg_loss, '
-                columns += 'batch_stats_train_std_loss, '
-                columns += 'batch_stats_val_avg_loss, '
+                columns = 'epoch,batch_train_loss,batch_val_loss,'
+                columns += 'batch_stats_train_avg_loss,'
+                columns += 'batch_stats_train_std_loss,'
+                columns += 'batch_stats_val_avg_loss,'
                 columns += 'batch_stats_val_std_loss\n'
                 file.writelines(columns)
 
