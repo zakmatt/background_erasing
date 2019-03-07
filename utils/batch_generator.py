@@ -21,7 +21,8 @@ class DirecotryNotExisting(Exception):
 class BatchGenerator(object):
     """Class generating image batches"""
 
-    def __init__(self, data, validate=0.1, batch_size=1, segmentation=True):
+    def __init__(self, data, validate=0.1,
+                 batch_size=1, segmentation=True, shape=None):
         """
 
         :param data:
@@ -46,6 +47,7 @@ class BatchGenerator(object):
         self.validate = validation_data
         self._num_batches = int(ceil(len(train_data) / self.batch_size))
         self._segmentation = segmentation
+        self._shape = shape
 
     @property
     def data(self):
@@ -114,18 +116,26 @@ class BatchGenerator(object):
         return image, mask
 
     @staticmethod
-    def read_images(image_path, mask_path=None):
+    def read_images(image_path, mask_path=None, shape=None):
 
         # any of files does not exist
-        if not os.path.isfile(image_path) or \
-                not os.path.isfile(mask_path):
+        if not os.path.isfile(image_path):
             return None, None
+
+        if mask_path is not None:
+            if not os.path.isfile(mask_path):
+                return None, None
 
         img = cv2.imread(image_path)
         # change channels from B,R,G to R,G,B
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        if shape is not None:
+            img = cv2.resize(img, shape)
+
         if mask_path is not None:
             mask = cv2.imread(mask_path, 0)
+            if shape is not None:
+                mask = cv2.resize(mask, shape)
         else:
             mask = None
 
@@ -157,12 +167,15 @@ class BatchGenerator(object):
 
             if self._segmentation:
                 mask_path = row['mask_path']
-                img, mask = self.read_images(image_path, mask_path)
+                img, mask = self.read_images(
+                    image_path, mask_path, self._shape
+                )
                 if mask is None:
                     continue
                 y_data.append(mask)
             else:
-                img = self.read_images(image_path)
+                img, _ = self.read_images(image_path, shape=self._shape)
+                y_data.append(row['class'])
 
             if img is None:
                 continue
@@ -170,24 +183,17 @@ class BatchGenerator(object):
             x_data.append(img)
 
         x_data = np.array(x_data, dtype=np.float32)
+        y_data = np.array(y_data, dtype=np.float32)
 
-        if self._segmentation:
-            y_data = np.array(y_data, dtype=np.float32)
-            return x_data, y_data
-        else:
-            return x_data
+        return x_data, y_data
 
     @property
     def train_batches(self):
 
         while True:
             rows = self.data.sample(self._batch_size)
-            if self._segmentation:
-                x_data, y_data = self._read_batch_pairs(rows)
-                yield x_data, y_data
-            else:
-                x_data = self._read_batch_pairs(rows)
-                yield x_data
+            x_data, y_data = self._read_batch_pairs(rows)
+            yield x_data, y_data
 
     def generate_test_batch(self, batch_size):
         """
