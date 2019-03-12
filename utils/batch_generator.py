@@ -175,6 +175,7 @@ class BatchGenerator(object):
                 y_data.append(mask)
             else:
                 img, _ = self.read_images(image_path, shape=self._shape)
+
                 y_data.append(row['class'])
 
             if img is None:
@@ -195,20 +196,12 @@ class BatchGenerator(object):
             x_data, y_data = self._read_batch_pairs(rows)
             yield x_data, y_data
 
-    def generate_test_batch(self, batch_size):
-        """
+    def generate_test_batch(self):
 
-        :param batch_size:
-        :return:
-        """
+        validation_batch = self.validate.shape[0]
+        rows = self.data.sample(validation_batch)
+        validate_rows = self.validate.sample(validation_batch)
+        x_train_data, y_train_data = self._read_batch_pairs(rows)
+        x_val_data, y_val_data = self._read_batch_pairs(validate_rows)
 
-        rows = self.data.sample(batch_size)
-        validate_rows = self.validate.sample(batch_size)
-        if self._segmentation:
-            x_train_data, y_train_data = self._read_batch_pairs(rows)
-            x_val_data, y_val_data = self._read_batch_pairs(validate_rows)
-            return (x_train_data, y_train_data), (x_val_data, y_val_data)
-        else:
-            x_train_data = self._read_batch_pairs(rows)
-            x_val_data = self._read_batch_pairs(validate_rows)
-            return x_train_data, x_val_data
+        return (x_train_data, y_train_data), (x_val_data, y_val_data)

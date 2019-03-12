@@ -39,13 +39,13 @@ def train(data_path, validation, results_file,
         '{}{}'.format(LUNGS_MASKS, file_name) for
         file_name in data.file_name.values
     ]
-    val_batch_size = int(len(data_path) * validation)
+    val_batch_size = int(len(data.shape[0]) * validation)
 
     batch_gen = BatchGenerator(
         data=data, validate=validation, batch_size=BATCH_SIZE
     )
     model = Unet(IMG_ROWS, IMG_COLS, batch_gen,
-                 save_model_dir, results_file, val_batch_size)
+                 save_model_dir, results_file)
 
     if initial_epoch > 0:
         model.load_weights(initial_epoch)

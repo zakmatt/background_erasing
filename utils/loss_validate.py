@@ -22,12 +22,10 @@ def mask_to_categorical(masks, batch_size=1, img_cols=256, img_rows=256):
 class LossValidate(object):
     def __init__(
             self, model, generate_test_batch,
-            results_file, val_batch_size, img_cols=256,
-            img_rows=256, to_categ=False
+            results_file, img_cols=256, img_rows=256
     ):
         self.generate_test_batch = generate_test_batch
-        self.val_batch_size = val_batch_size
-        self.to_categ = to_categ
+
         self.img_rows = img_rows
         self.img_cols = img_cols
         self.model = model
@@ -77,18 +75,30 @@ class LossValidate(object):
         return 1 - IOU_calc(y_true, y_false)
 
     def _mask_to_categorical(self, masks, batch_size=1):
-        if self.to_categ:
-            return mask_to_categorical(
-                masks=masks, batch_size=batch_size,
-                img_cols=self.img_cols, img_rows=self.img_rows
-            ).astype(np.float32)
+        return mask_to_categorical(
+            masks=masks, batch_size=batch_size,
+            img_cols=self.img_cols, img_rows=self.img_rows
+        ).astype(np.float32)
 
-        return masks.astype(np.float32)
+    def error_log_classification(self, epoch):
+        train_batch, val_batch = self.generate_test_batch()
+        train_imgs, train_targets = train_batch
+        val_imgs, val_targets = val_batch
 
-    def error_log(self, epoch):
-        train_batch, val_batch = self.generate_test_batch(
-            self.val_batch_size
-        )
+        train_error = self.model.evaluate(train_imgs, train_targets)
+        val_error = self.model.evaluate(val_imgs, val_targets)
+
+        if not os.path.exists(self.results_file):
+            with open(self.results_file, 'w') as file:
+                columns = 'train_error,val_error\n'
+                file.writelines(columns)
+
+        text = '{0},{1},{2}\n'.format(epoch, train_error, val_error)
+        with open(self.results_file, 'a') as file:
+            file.writelines(text)
+
+    def error_log_segmentation(self, epoch):
+        train_batch, val_batch = self.generate_test_batch()
         train_imgs, train_masks = train_batch
         val_imgs, val_masks = val_batch
         train_results = self.model.predict(train_imgs)

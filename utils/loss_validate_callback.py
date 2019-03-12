@@ -8,11 +8,9 @@ from utils.loss_validate import LossValidate
 class LossValidateCallback(LossValidate, Callback):
 
     def __init__(self, generate_test_batch,
-                 results_file, val_batch_size, img_cols=256,
-                 img_rows=256, to_categ=False):
+                 results_file, img_cols=256,
+                 img_rows=256, is_segment=False):
         self.generate_test_batch = generate_test_batch
-        self.val_batch_size = val_batch_size
-        self.to_categ = to_categ
         self.img_rows = img_rows
         self.img_cols = img_cols
 
@@ -20,7 +18,10 @@ class LossValidateCallback(LossValidate, Callback):
         if not os.path.exists(basedir):
             os.makedirs(basedir)
         self.results_file = results_file
-        self.to_categ = to_categ
+        self.is_segment = is_segment
 
     def on_epoch_end(self, epoch, logs=None):
-        self.error_log(epoch)
+        if self.is_segment:
+            self.error_log_segmentation(epoch)
+        else:
+            self.error_log_classification(epoch)

@@ -22,7 +22,7 @@ from utils.loss_validate_callback import LossValidateCallback
 class Unet(object):
 
     def __init__(self, img_rows, img_cols, batch_gen,
-                 save_model_dir, results_file, val_batch_size):
+                 save_model_dir, results_file):
         self.img_rows = img_rows
         self.img_cols = img_cols
         self.batch_gen = batch_gen
@@ -48,8 +48,7 @@ class Unet(object):
             LossValidateCallback(
                 batch_gen.generate_test_batch,
                 results_file,
-                val_batch_size=val_batch_size,
-                to_categ=True
+                is_segment=True
             )
         ]
 
