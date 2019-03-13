@@ -196,6 +196,14 @@ class BatchGenerator(object):
             x_data, y_data = self._read_batch_pairs(rows)
             yield x_data, y_data
 
+    @property
+    def validation_batches(self):
+
+        while True:
+            for row in self.validate.iterrows():
+                x_data, y_data = self._read_batch_pairs(row)
+                yield x_data, y_data
+
     def generate_test_batch(self):
 
         validation_batch = self.validate.shape[0]

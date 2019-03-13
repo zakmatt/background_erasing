@@ -85,15 +85,14 @@ class VGG16_N(object):
         return model
 
     def train(self, initial_epoch, nb_epochs, steps_per_epoch):
-
-        (_, _), (val_x, val_y) = self.batch_gen.generate_test_batch()
         self.model.fit_generator(
             self.batch_gen.train_batches,
             steps_per_epoch=steps_per_epoch,
             epochs=nb_epochs,
             callbacks=self.callbacks,
             initial_epoch=initial_epoch,
-            validation_data=(val_x, val_y)
+            validation_data=self.batch_gen.validation_batches,
+            validation_steps=self.batch_gen.validate.shape[0]
         )
 
     def load_weights(self, weights_path):
