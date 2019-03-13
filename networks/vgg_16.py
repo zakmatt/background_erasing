@@ -41,8 +41,7 @@ class VGG16_N(object):
         checkpoint = ModelCheckpoint(
             filepath=f_path,
             mode='auto',
-            monitor='val_loss',
-            save_best_only=True,
+            period=1
         )
         self.callbacks = [checkpoint]
 

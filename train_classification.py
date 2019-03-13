@@ -7,10 +7,10 @@ from keras.utils import to_categorical
 from networks.vgg_16 import VGG16_N
 from utils.batch_generator import BatchGenerator
 
-BATCH_SIZE = 8
+BATCH_SIZE = 32
 IMG_SHAPE = (256, 256, 3)
-NB_EPOCHS = 500
-STEPS_PER_EPOCH = 300
+NB_EPOCHS = 150
+STEPS_PER_EPOCH = 200
 
 LUNGS_DIR = './dataset/final_classification/'
 
