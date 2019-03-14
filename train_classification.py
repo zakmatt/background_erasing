@@ -48,7 +48,7 @@ def train(data_path, validation, results_file,
     if initial_epoch > 0:
         model.load_weights(initial_epoch)
 
-    model.train(initial_epoch, steps_per_epoch)
+    model.train(initial_epoch, NB_EPOCHS)
 
 
 if __name__ == '__main__':
