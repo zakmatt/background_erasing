@@ -90,7 +90,7 @@ class LossValidate(object):
 
         if not os.path.exists(self.results_file):
             with open(self.results_file, 'w') as file:
-                columns = 'train_error,val_error\n'
+                columns = 'epoch,train_loss,train_acc,val_loss,val_acc\n'
                 file.writelines(columns)
 
         text = '{0},{1},{2}\n'.format(epoch, train_error, val_error)
