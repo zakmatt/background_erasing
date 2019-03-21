@@ -70,12 +70,8 @@ class VGG16_N(object):
         base_model.trainable = False
 
         # add a global spatial average pooling layer
-        x = base_model.output
-        x = BatchNormalization()(x)
-        x = Conv2D(
-            64, kernel_size=(1, 1), padding='same',
-            activation='relu', name='last_conv'
-        )(x)
+        base_model.layers[-2].name = 'last_conv'
+        x = base_model.layers[-2].output
         x = GlobalAveragePooling2D()(x)
         x = Dense(256, activation='relu')(x)
         predictions = Dense(3, activation='softmax', name='activations')(x)
