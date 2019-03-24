@@ -16,11 +16,12 @@ IMG_SHAPE = (256, 256, 3)
 NB_EPOCHS = 150
 STEPS_PER_EPOCH = 200
 
-LUNGS_DIR = './dataset/final_classification/'
+SEGMENTED_LUNGS_DIR = './dataset/segmented_classification_jpg/'
+NON_SEGMENTED_LUNGS_DIR = './dataset/classification_jpg/'
 
 
 def train(data_path, validation, results_file,
-          save_model_dir, steps_per_epoch=STEPS_PER_EPOCH, initial_epoch=0):
+          save_model_dir, initial_epoch=0):
     """Model training main script
 
     :param data: data_path
@@ -34,25 +35,39 @@ def train(data_path, validation, results_file,
     :return:
     """
 
-    data = pd.read_csv(data_path)
-    data['image_path'] = data.file.apply(
-        lambda x: os.path.join(LUNGS_DIR, x))
-    data['class'] = list(to_categorical(data['class']))
+    for img_path, is_segmented in [
+        (SEGMENTED_LUNGS_DIR, 'segmented'),
+        (NON_SEGMENTED_LUNGS_DIR, 'non_segmented')
+    ]:
+        data = pd.read_csv(data_path)
+        data['image_path'] = data.file.apply(
+            lambda x: os.path.join(img_path, x))
+        data['class'] = list(to_categorical(data['class']))
 
-    batch_gen = BatchGenerator(
-        data=data, validate=validation,
-        batch_size=BATCH_SIZE, segmentation=False,
-        shape=IMG_SHAPE[:-1]
-    )
-    model = VGG16_N(
-        IMG_SHAPE[0], IMG_SHAPE[1], batch_gen,
-        save_model_dir, results_file
-    )
+        batch_gen = BatchGenerator(
+            data=data, validate=validation,
+            batch_size=BATCH_SIZE, segmentation=False,
+            shape=IMG_SHAPE[:-1]
+        )
 
-    if initial_epoch > 0:
-        model.load_weights(initial_epoch)
+        models_result_path = [
+            (VGG16_N, 'vgg/{}/'.format(is_segmented)),
+            (Inception, 'inception/{}/'.format(is_segmented)),
+            (ResNet, 'resnet/{}/'.format(is_segmented)),
+        ]
+        for model_arch, path in models_result_path:
+            results_save_dir = os.path.join(
+                save_model_dir, path
+            )
+            results_file_name = '{}_{}'.format(
+                model_arch.name, results_file
+            )
+            model = model_arch(
+                IMG_SHAPE[0], IMG_SHAPE[1], batch_gen,
+                results_save_dir, results_file_name
+            )
 
-    model.train(initial_epoch, NB_EPOCHS)
+            model.train(initial_epoch, NB_EPOCHS)
 
 
 if __name__ == '__main__':
