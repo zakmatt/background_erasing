@@ -5,7 +5,8 @@ from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.applications.vgg16 import VGG16
 from keras.layers import (
     Dense,
-    Flatten
+    Flatten,
+    MaxPool2D
 )
 from keras.models import Model
 from keras.optimizers import Adam
@@ -74,6 +75,7 @@ class VGG16_N(object):
         x = base_model.output
         x = Flatten()(x)
         x = Dense(256, activation='relu')(x)
+        x = Dense(128, activation='relu')(x)
         predictions = Dense(3, activation='softmax', name='activations')(x)
 
         model = Model(inputs=base_model.input, outputs=predictions)
