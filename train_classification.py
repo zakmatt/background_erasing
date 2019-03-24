@@ -4,7 +4,11 @@ import pandas as pd
 
 from keras.utils import to_categorical
 
-from networks.vgg_16 import VGG16_N
+from networks.classification_architectures import (
+    Inception,
+    ResNet,
+    VGG16_N
+)
 from utils.batch_generator import BatchGenerator
 
 BATCH_SIZE = 32
