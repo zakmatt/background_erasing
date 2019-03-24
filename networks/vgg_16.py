@@ -1,12 +1,11 @@
+import keras.backend as K
 import os
 
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.applications.vgg16 import VGG16
 from keras.layers import (
     Dense,
-    GlobalAveragePooling2D,
-    BatchNormalization,
-    Conv2D
+    Flatten
 )
 from keras.models import Model
 from keras.optimizers import Adam
@@ -67,12 +66,13 @@ class VGG16_N(object):
             weights='imagenet',
             include_top=False
         )
-        base_model.trainable = False
+        # base_model.trainable = False
+        for layer in base_model.layers:
+            layer.trainable = False
 
         # add a global spatial average pooling layer
-        base_model.layers[-2].name = 'last_conv'
-        x = base_model.layers[-2].output
-        x = GlobalAveragePooling2D()(x)
+        x = base_model.output
+        x = Flatten()(x)
         x = Dense(256, activation='relu')(x)
         predictions = Dense(3, activation='softmax', name='activations')(x)
 
