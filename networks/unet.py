@@ -35,13 +35,14 @@ class Unet(object):
 
         f_path = str(
             save_model_dir
-        ) + '/deep_unet_batch_1_epoch_{epoch:02d}.hdf5'
+        ) + '/deep_unet_epoch_{epoch:02d}.hdf5'
 
         checkpoint = ModelCheckpoint(
             filepath=f_path,
             mode='auto',
-            period=50
+            period=1
         )
+
         results_file = os.path.join(save_model_dir, results_file)
         self.callbacks = [
             checkpoint,
@@ -182,10 +183,10 @@ class Unet(object):
             )
             yield x, mask
 
-    def train(self, initial_epoch, nb_epochs, steps_per_epoch):
+    def train(self, initial_epoch, nb_epochs):
         self.model.fit_generator(
             self._get_batch(),
-            steps_per_epoch=steps_per_epoch,
+            steps_per_epoch=self.batch_gen.num_batches,
             epochs=nb_epochs,
             callbacks=self.callbacks,
             initial_epoch=initial_epoch

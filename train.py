@@ -6,17 +6,16 @@ from networks.unet import Unet
 
 from utils.batch_generator import BatchGenerator
 
-BATCH_SIZE = 1
+BATCH_SIZE = 3
 IMG_ROWS, IMG_COLS = 256, 256
 NB_EPOCHS = 500
-STEPS_PER_EPOCH = 500
 
 LUNGS_IMGS = './dataset/lungs_segmentation/lungs_resized/'
 LUNGS_MASKS = './dataset/lungs_segmentation/masks_dilated_resized/'
 
 
 def train(data_path, validation, results_file,
-          save_model_dir, steps_per_epoch=STEPS_PER_EPOCH, initial_epoch=0):
+          save_model_dir, initial_epoch=0):
     """Model training main script
 
     :param data: data_path
@@ -39,7 +38,6 @@ def train(data_path, validation, results_file,
         '{}{}'.format(LUNGS_MASKS, file_name) for
         file_name in data.file_name.values
     ]
-    val_batch_size = int(len(data.shape[0]) * validation)
 
     batch_gen = BatchGenerator(
         data=data, validate=validation, batch_size=BATCH_SIZE
@@ -50,7 +48,7 @@ def train(data_path, validation, results_file,
     if initial_epoch > 0:
         model.load_weights(initial_epoch)
 
-    model.train(initial_epoch, NB_EPOCHS, steps_per_epoch)
+    model.train(initial_epoch, NB_EPOCHS)
 
 
 if __name__ == '__main__':
