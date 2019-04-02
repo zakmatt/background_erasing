@@ -40,7 +40,7 @@ def train(data_path, validation, results_file,
     ]
 
     batch_gen = BatchGenerator(
-        data=data, validate=validation, batch_size=BATCH_SIZE
+        data=data, validate=validation, batch_size=BATCH_SIZE, rescale=False
     )
     model = Unet(IMG_ROWS, IMG_COLS, batch_gen,
                  save_model_dir, results_file)

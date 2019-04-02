@@ -44,18 +44,20 @@ def train(data_path, validation, results_file,
             lambda x: os.path.join(img_path, x))
         data['class'] = list(to_categorical(data['class']))
 
-        batch_gen = BatchGenerator(
-            data=data, validate=validation,
-            batch_size=BATCH_SIZE, segmentation=False,
-            shape=IMG_SHAPE[:-1]
-        )
-
         models_result_path = [
-            (VGG16_N, 'vgg/{}/'.format(is_segmented)),
-            (Inception, 'inception/{}/'.format(is_segmented)),
-            (ResNet, 'resnet/{}/'.format(is_segmented)),
+            # (model, save path, rescale)
+            (VGG16_N, 'vgg/{}/'.format(is_segmented), False),
+            (Inception, 'inception/{}/'.format(is_segmented), True),
+            (ResNet, 'resnet/{}/'.format(is_segmented), True),
         ]
-        for model_arch, path in models_result_path:
+        for model_arch, path, rescale in models_result_path:
+
+            batch_gen = BatchGenerator(
+                data=data, validate=validation,
+                batch_size=BATCH_SIZE, segmentation=False,
+                shape=IMG_SHAPE[:-1], rescale=rescale
+            )
+
             results_save_dir = os.path.join(
                 save_model_dir, path
             )
