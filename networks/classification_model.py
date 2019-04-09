@@ -96,7 +96,7 @@ class ClassModel(metaclass=ABCMeta):
         if hasattr(self, 'model'):
             self.model.fit_generator(
                 self.batch_gen.train_batches,
-                steps_per_epoch=1, # self.batch_gen.num_batches,
+                steps_per_epoch=self.batch_gen.num_batches,
                 epochs=nb_epochs,
                 callbacks=self.callbacks,
                 initial_epoch=initial_epoch,

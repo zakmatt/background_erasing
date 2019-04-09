@@ -12,8 +12,7 @@ from utils.batch_generator import BatchGenerator
 
 BATCH_SIZE = 32
 IMG_SHAPE = (256, 256, 3)
-NB_EPOCHS = 1#50
-STEPS_PER_EPOCH = 1#200
+NB_EPOCHS = 150
 
 SEGMENTED_LUNGS_DIR = './dataset/segmented_classification_jpg/'
 NON_SEGMENTED_LUNGS_DIR = './dataset/classification_jpg/'
@@ -45,7 +44,7 @@ def train(data_path, validation, results_file,
 
         models_result_path = [
             # (model, save path, rescale)
-            # (VGG16_N, 'vgg/{}/'.format(is_segmented), False),
+            (VGG16_N, 'vgg/{}/'.format(is_segmented), False),
             (Inception, 'inception/{}/'.format(is_segmented), True),
             (ResNet, 'resnet/{}/'.format(is_segmented), True),
         ]
