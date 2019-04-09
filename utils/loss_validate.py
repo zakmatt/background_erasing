@@ -1,7 +1,6 @@
 import numpy as np
 import os
-
-from keras.utils import to_categorical
+import tensorflow as tf
 
 
 class WrongShapeException(Exception):
@@ -9,14 +8,14 @@ class WrongShapeException(Exception):
 
 
 def mask_to_categorical(masks, batch_size=1, img_cols=256, img_rows=256):
-    masks = to_categorical(masks, 2)
+    masks = tf.keras.utils.to_categorical(masks, 2)
     masks = np.reshape(
         masks,
         (
             batch_size, img_cols * img_rows, 2
         )
     )
-    return masks.astype(np.float32)
+    return masks.astype(tf.float32)
 
 
 class LossValidate(object):
@@ -78,7 +77,7 @@ class LossValidate(object):
         return mask_to_categorical(
             masks=masks, batch_size=batch_size,
             img_cols=self.img_cols, img_rows=self.img_rows
-        ).astype(np.float32)
+        ).astype(tf.float32)
 
     def error_log_classification(self, epoch):
         train_batch, val_batch = self.generate_test_batch()

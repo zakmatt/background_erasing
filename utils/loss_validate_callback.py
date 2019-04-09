@@ -1,11 +1,10 @@
 import os
-
-from keras.callbacks import Callback
+import tensorflow as tf
 
 from utils.loss_validate import LossValidate
 
 
-class LossValidateCallback(LossValidate, Callback):
+class LossValidateCallback(LossValidate, tf.keras.callbacks.Callback):
 
     def __init__(self, generate_test_batch,
                  results_file, img_cols=256,

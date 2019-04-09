@@ -1,13 +1,7 @@
 import os
+import tensorflow as tf
 
 from abc import ABCMeta
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-from keras.layers import (
-    Dense,
-    GlobalAveragePooling2D
-)
-from keras.models import Model
-from keras.optimizers import Adam
 
 from utils.loss_validate_callback import LossValidateCallback
 
@@ -33,14 +27,14 @@ class ClassModel(metaclass=ABCMeta):
             batch_gen.batch_size
         ) + '_epoch_{epoch:02d}.hdf5'
 
-        checkpoint = ModelCheckpoint(
+        checkpoint = tf.keras.callbacks.ModelCheckpoint(
             filepath=f_path,
             mode='auto',
             period=1
         )
         self.callbacks = [checkpoint]
 
-        reduce_on_plateau = ReduceLROnPlateau(
+        reduce_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
             monitor='val_loss', factor=0.8, patience=10, verbose=1,
             mode='auto', min_delta=0.0001, cooldown=5, min_lr=0.0001
         )
@@ -77,16 +71,21 @@ class ClassModel(metaclass=ABCMeta):
 
         # add a global spatial average pooling layer
         x = base_model.output
-        x = GlobalAveragePooling2D()(x)
-        x = Dense(1024, activation='relu')(x)
-        x = Dense(512, activation='relu')(x)
-        x = Dense(256, activation='relu')(x)
-        predictions = Dense(3, activation='softmax', name='activations')(x)
+        x = tf.keras.layers.GlobalAveragePooling2D()(x)
+        x = tf.keras.layers.Dense(1024, activation='relu')(x)
+        x = tf.keras.layers.Dense(512, activation='relu')(x)
+        x = tf.keras.layers.Dense(256, activation='relu')(x)
+        predictions = tf.keras.layers.Dense(
+            3, activation='softmax', name='activations'
+        )(x)
 
-        self.model = Model(inputs=base_model.input, outputs=predictions)
+        self.model = tf.keras.Model(
+            inputs=base_model.input,
+            outputs=predictions
+        )
 
         self.model.compile(
-            optimizer=Adam(lr=1e-4),
+            optimizer=tf.keras.optimizers.Adam(lr=1e-4),
             loss='categorical_crossentropy',
             metrics=['accuracy']
         )
@@ -97,7 +96,7 @@ class ClassModel(metaclass=ABCMeta):
         if hasattr(self, 'model'):
             self.model.fit_generator(
                 self.batch_gen.train_batches,
-                steps_per_epoch=self.batch_gen.num_batches,
+                steps_per_epoch=1, # self.batch_gen.num_batches,
                 epochs=nb_epochs,
                 callbacks=self.callbacks,
                 initial_epoch=initial_epoch,
