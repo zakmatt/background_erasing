@@ -22,7 +22,7 @@ class BatchGenerator(object):
     """Class generating image batches"""
 
     def __init__(self, data, validate=0.1,
-                 batch_size=1, rescale=True, segmentation=True, shape=None):
+                 batch_size=1, preprocess=None, segmentation=True, shape=None):
         """
 
         :param data:
@@ -46,7 +46,7 @@ class BatchGenerator(object):
         self.data = train_data
         self.validate = validation_data
         self._num_batches = int(ceil(len(train_data) / self.batch_size))
-        self._rescale = rescale
+        self._preprocess = preprocess
         self._segmentation = segmentation
         self._shape = shape
 
@@ -117,7 +117,7 @@ class BatchGenerator(object):
         return image, mask
 
     @staticmethod
-    def read_images(image_path, rescale=True, mask_path=None, shape=None):
+    def read_images(image_path, preprocess=None, mask_path=None, shape=None):
 
         # any of files does not exist
         if not os.path.isfile(image_path):
@@ -141,13 +141,13 @@ class BatchGenerator(object):
             mask = None
 
         # augment pair
-        img, mask = BatchGenerator._augment(img, mask)
+        # img, mask = BatchGenerator._augment(img, mask)
 
         # change types from uint8 to float32
         img = img.astype(np.float32)
 
-        if rescale is not None:
-            img /= 255.
+        if preprocess:
+            img = preprocess(img)
 
         if mask is not None:
             mask = mask.astype(np.float32)
@@ -173,14 +173,14 @@ class BatchGenerator(object):
             if self._segmentation:
                 mask_path = row['mask_path']
                 img, mask = self.read_images(
-                    image_path, self._rescale, mask_path, self._shape
+                    image_path, self._preprocess, mask_path, self._shape
                 )
                 if mask is None:
                     continue
                 y_data.append(mask)
             else:
                 img, _ = self.read_images(
-                    image_path, rescale=self._rescale, shape=self._shape
+                    image_path, preprocess=self._preprocess, shape=self._shape
                 )
 
                 y_data.append(row['class'])

@@ -1,7 +1,13 @@
 import os
-import tensorflow as tf
 
 from abc import ABCMeta
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from keras.layers import (
+    Dense,
+    GlobalAveragePooling2D
+)
+from keras.models import Model
+from keras.optimizers import Adam
 
 from utils.loss_validate_callback import LossValidateCallback
 
@@ -27,14 +33,14 @@ class ClassModel(metaclass=ABCMeta):
             batch_gen.batch_size
         ) + '_epoch_{epoch:02d}.hdf5'
 
-        checkpoint = tf.keras.callbacks.ModelCheckpoint(
+        checkpoint = ModelCheckpoint(
             filepath=f_path,
             mode='auto',
             period=1
         )
         self.callbacks = [checkpoint]
 
-        reduce_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
+        reduce_on_plateau = ReduceLROnPlateau(
             monitor='val_loss', factor=0.8, patience=10, verbose=1,
             mode='auto', min_delta=0.0001, cooldown=5, min_lr=0.0001
         )
@@ -71,21 +77,16 @@ class ClassModel(metaclass=ABCMeta):
 
         # add a global spatial average pooling layer
         x = base_model.output
-        x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        x = tf.keras.layers.Dense(1024, activation='relu')(x)
-        x = tf.keras.layers.Dense(512, activation='relu')(x)
-        x = tf.keras.layers.Dense(256, activation='relu')(x)
-        predictions = tf.keras.layers.Dense(
-            3, activation='softmax', name='activations'
-        )(x)
+        x = GlobalAveragePooling2D()(x)
+        x = Dense(1024, activation='relu')(x)
+        x = Dense(512, activation='relu')(x)
+        x = Dense(256, activation='relu')(x)
+        predictions = Dense(2, activation='softmax', name='activations')(x)
 
-        self.model = tf.keras.Model(
-            inputs=base_model.input,
-            outputs=predictions
-        )
+        self.model = Model(inputs=base_model.input, outputs=predictions)
 
         self.model.compile(
-            optimizer=tf.keras.optimizers.Adam(lr=1e-4),
+            optimizer=Adam(lr=1e-4),
             loss='categorical_crossentropy',
             metrics=['accuracy']
         )

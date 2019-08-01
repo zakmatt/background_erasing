@@ -1,7 +1,10 @@
 import argparse
 import os
 import pandas as pd
-import tensorflow as tf
+
+from keras.utils import to_categorical
+from keras.applications.inception_v3 import preprocess_input as process_input_inception
+from keras.applications.resnet50 import preprocess_input as process_input_resnet
 
 from networks.classification_architectures import (
     Inception,
@@ -12,9 +15,11 @@ from utils.batch_generator import BatchGenerator
 
 BATCH_SIZE = 32
 IMG_SHAPE = (256, 256, 3)
-NB_EPOCHS = 150
+NB_EPOCHS = 100
+STEPS_PER_EPOCH = 200
 
-SEGMENTED_LUNGS_DIR = './dataset/segmented_classification_jpg/'
+#SEGMENTED_LUNGS_DIR = './dataset/segmented_classification_jpg/'
+SEGMENTED_LUNGS_DIR = './dataset/segmented_full_shenzhen/'
 NON_SEGMENTED_LUNGS_DIR = './dataset/classification_jpg/'
 
 
@@ -33,41 +38,44 @@ def train(data_path, validation, results_file,
     :return:
     """
 
-    for img_path, is_segmented in [
-        (SEGMENTED_LUNGS_DIR, 'segmented'),
-        (NON_SEGMENTED_LUNGS_DIR, 'non_segmented')
-    ]:
-        data = pd.read_csv(data_path)
-        data['image_path'] = data.file.apply(
-            lambda x: os.path.join(img_path, x))
-        data['class'] = list(tf.keras.utils.to_categorical(data['class']))
+    train_runs = ['1_run', '2_run', '3_run', '4_run', '5_run', '6_run', '7_run', '8_run', '9_run', '10_run']
+    for train_run in train_runs:
 
-        models_result_path = [
-            # (model, save path, rescale)
-            (VGG16_N, 'vgg/{}/'.format(is_segmented), False),
-            (Inception, 'inception/{}/'.format(is_segmented), True),
-            (ResNet, 'resnet/{}/'.format(is_segmented), True),
-        ]
-        for model_arch, path, rescale in models_result_path:
+        for img_path, is_segmented in [
+            (SEGMENTED_LUNGS_DIR, 'segmented'),
+            #(NON_SEGMENTED_LUNGS_DIR, 'non_segmented')
+            ]:
+            data = pd.read_csv(data_path)
+            data['image_path'] = data.file.apply(
+                lambda x: os.path.join(img_path, x))
+            data['class'] = list(to_categorical(data['target']))
+            
+            models_result_path = [
+                # (model, save path, rescale)
+                (VGG16_N, 'vgg/{}/{}'.format(is_segmented, train_run), None),
+                (Inception, 'inception/{}/{}'.format(is_segmented, train_run), process_input_inception),
+                (ResNet, 'resnet/{}/{}'.format(is_segmented, train_run), process_input_resnet),
+            ]
+            for model_arch, path, preprocess in models_result_path:
 
-            batch_gen = BatchGenerator(
-                data=data, validate=validation,
-                batch_size=BATCH_SIZE, segmentation=False,
-                shape=IMG_SHAPE[:-1], rescale=rescale
-            )
+                batch_gen = BatchGenerator(
+                    data=data, validate=validation,
+                    batch_size=BATCH_SIZE, segmentation=False,
+                    shape=IMG_SHAPE[:-1], preprocess=preprocess
+                    )
 
-            results_save_dir = os.path.join(
-                save_model_dir, path
-            )
-            results_file_name = '{}_{}'.format(
-                model_arch.name, results_file
-            )
-            model = model_arch(
-                IMG_SHAPE[0], IMG_SHAPE[1], batch_gen,
-                results_save_dir, results_file_name
-            )
+                results_save_dir = os.path.join(
+                    save_model_dir, path
+                    )
+                results_file_name = '{}_{}'.format(
+                    model_arch.name, results_file
+                    )
+                model = model_arch(
+                    IMG_SHAPE[0], IMG_SHAPE[1], batch_gen,
+                    results_save_dir, results_file_name
+                    )
 
-            model.train(initial_epoch, NB_EPOCHS)
+                model.train(initial_epoch, NB_EPOCHS)
 
 
 if __name__ == '__main__':

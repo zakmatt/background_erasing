@@ -1,4 +1,6 @@
-import tensorflow as tf
+from keras.applications.inception_v3 import InceptionV3
+from keras.applications.resnet50 import ResNet50
+from keras.applications.vgg16 import VGG16
 
 from networks.classification_model import ClassModel
 
@@ -17,11 +19,7 @@ class VGG16_N(ClassModel):
         ClassModel.__init__(self, img_rows, img_cols, batch_gen,
                             save_model_dir, results_file)
         self.model = None
-        self.create_model(
-            img_rows,
-            img_cols,
-            tf.keras.applications.VGG16
-        )
+        self.create_model(img_rows, img_cols, VGG16)
 
 
 class ResNet(ClassModel):
@@ -36,11 +34,7 @@ class ResNet(ClassModel):
         ClassModel.__init__(self, img_rows, img_cols, batch_gen,
                             save_model_dir, results_file)
         self.model = None
-        self.create_model(
-            img_rows,
-            img_cols,
-            tf.keras.applications.ResNet50
-        )
+        self.create_model(img_rows, img_cols, ResNet50)
 
 
 class Inception(ClassModel):
@@ -55,8 +49,4 @@ class Inception(ClassModel):
         ClassModel.__init__(self, img_rows, img_cols, batch_gen,
                             save_model_dir, results_file)
         self.model = None
-        self.create_model(
-            img_rows,
-            img_cols,
-            tf.keras.applications.InceptionV3
-        )
+        self.create_model(img_rows, img_cols, InceptionV3)
