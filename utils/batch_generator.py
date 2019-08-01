@@ -141,7 +141,7 @@ class BatchGenerator(object):
             mask = None
 
         # augment pair
-        # img, mask = BatchGenerator._augment(img, mask)
+        img, mask = BatchGenerator._augment(img, mask)
 
         # change types from uint8 to float32
         img = img.astype(np.float32)

@@ -5,6 +5,7 @@ import pandas as pd
 from keras.utils import to_categorical
 from keras.applications.inception_v3 import preprocess_input as process_input_inception
 from keras.applications.resnet50 import preprocess_input as process_input_resnet
+from keras.applications.vgg16 import preprocess_input as process_input_vgg
 
 from networks.classification_architectures import (
     Inception,
@@ -52,7 +53,7 @@ def train(data_path, validation, results_file,
             
             models_result_path = [
                 # (model, save path, rescale)
-                (VGG16_N, 'vgg/{}/{}'.format(is_segmented, train_run), None),
+                (VGG16_N, 'vgg/{}/{}'.format(is_segmented, train_run), process_input_vgg),
                 (Inception, 'inception/{}/{}'.format(is_segmented, train_run), process_input_inception),
                 (ResNet, 'resnet/{}/{}'.format(is_segmented, train_run), process_input_resnet),
             ]

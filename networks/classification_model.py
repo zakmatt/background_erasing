@@ -4,7 +4,8 @@ from abc import ABCMeta
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.layers import (
     Dense,
-    GlobalAveragePooling2D
+    Flatten
+    #GlobalAveragePooling2D
 )
 from keras.models import Model
 from keras.optimizers import Adam
@@ -77,9 +78,7 @@ class ClassModel(metaclass=ABCMeta):
 
         # add a global spatial average pooling layer
         x = base_model.output
-        x = GlobalAveragePooling2D()(x)
-        x = Dense(1024, activation='relu')(x)
-        x = Dense(512, activation='relu')(x)
+        x = Flatten()(x)
         x = Dense(256, activation='relu')(x)
         predictions = Dense(2, activation='softmax', name='activations')(x)
 
